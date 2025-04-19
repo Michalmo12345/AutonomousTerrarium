@@ -1,21 +1,18 @@
-// routes/terrariums.js
 const express = require('express')
 const router = express.Router()
+const {
+  getTerrariums,
+  createTerrarium,
+  updateTerrarium,
+  deleteTerrarium,
+} = require('../controllers/terrariumController')
+const authenticateToken = require('../middleware/authMiddleware')
 
-// Dummy data (replace with DB logic later)
-let terrariums = []
+router.use(authenticateToken)
 
-// GET all terrariums
-router.get('/', (req, res) => {
-  res.json(terrariums)
-})
-
-// POST create a new terrarium
-router.post('/', (req, res) => {
-  const { userId, animalId, temperature, humidity } = req.body
-  const newTerrarium = { id: Date.now(), userId, animalId, temperature, humidity }
-  terrariums.push(newTerrarium)
-  res.status(201).json(newTerrarium)
-})
+router.get('/', getTerrariums)
+router.post('/', createTerrarium)
+router.put('/:id', updateTerrarium)
+router.delete('/:id', deleteTerrarium)
 
 module.exports = router

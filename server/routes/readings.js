@@ -1,21 +1,14 @@
-// routes/readings.js
 const express = require('express')
 const router = express.Router()
+const { createReading, getReadings } = require('../controllers/readingController')
+const authenticateToken = require('../middleware/authMiddleware')
 
-// Dummy data (replace with DB logic later)
-let readings = []
+router.use(authenticateToken)
 
-// GET all readings
-router.get('/', (req, res) => {
-  res.json(readings)
-})
+// POST /api/readings/:terrariumId
+router.post('/:terrariumId', createReading)
 
-// POST create a new reading
-router.post('/', (req, res) => {
-  const { terrariumId, temperature, humidity } = req.body
-  const newReading = { id: Date.now(), terrariumId, temperature, humidity }
-  readings.push(newReading)
-  res.status(201).json(newReading)
-})
+// GET /api/readings/:terrariumId
+router.get('/:terrariumId', getReadings)
 
 module.exports = router
