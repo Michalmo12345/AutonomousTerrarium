@@ -1,81 +1,114 @@
-/* Global Styles */
+html, body, #root {
+  background-color: #000 !important;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
 
-body {
-    background-color: #121212;  /* Dark background for night mode */
-    color: #e0e0e0;  /* Light text for readability */
-    font-family: 'Arial', sans-serif;
-  }
-  
-  .container {
-    max-width: 450px;
-    padding: 20px;
-  }
-  
-  h1, h3 {
-    text-align: center;
-    color: #ffffff;
-  }
-  
-  input {
-    background-color: #333333;  /* Dark background for input fields */
-    color: #ffffff;  /* Light text in inputs */
-    border: 1px solid #555555;  /* Subtle border */
-  }
-  
-  button {
-    background-color: #007bff;  /* Blue button background */
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    width: 100%;
-    font-size: 16px;
-    cursor: pointer;
-    border-radius: 5px;
-  }
-  
-  button:hover {
-    background-color: #0056b3;  /* Darker blue on hover */
-  }
-  
-  .form-container {
-    background-color: #1f1f1f;  /* Dark background for form container */
-    border-radius: 8px;
-    padding: 30px;
-    margin: 20px auto;
-  }
-  
-  .register-link, .login-link {
-    display: block;
-    text-align: center;
-    color: #007bff;
-    margin-top: 15px;
-  }
-  
-  .register-link:hover, .login-link:hover {
-    text-decoration: underline;
-  }
-  
-  .form-header {
-    margin-bottom: 20px;
-  }
-  
-  .container {
-    padding-top: 50px;
-    padding-bottom: 50px;
-  }
-  
-  /* Add custom spacing for error message */
-  .error-message {
-    color: red;
-    font-size: 14px;
-    text-align: center;
-  }
-  
-  .signup-link {
-    color: #007bff;
-    text-decoration: none;
-  }
-  
-  .signup-link:hover {
-    text-decoration: underline;
-  }
+.form-container {
+  background-color: #111;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.signup-link {
+  color: #ccc;
+}
+
+.card {
+  background-color: #1a1a1a !important;
+  border: none !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.card-text {
+  font-size: 0.95rem;
+}
+
+.btn-primary {
+  background-color: #333;
+  border-color: #444;
+}
+
+.btn-primary:hover {
+  background-color: #444;
+}
+
+.btn-secondary {
+  background-color: #222;
+  border-color: #333;
+}
+
+.btn-secondary:hover {
+  background-color: #333;
+}
+
+.btn-warning {
+  background-color: transparent;
+  border: 1px solid #666;
+  color: #ccc;
+  font-size: 0.9rem;
+  padding: 0.25rem 0.75rem;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.btn-warning:hover {
+  color: #fff;
+  border-color: #999;
+}
+
+.btn-danger {
+  background-color: transparent;
+  border: 1px solid #666;
+  color: #ccc;
+  font-size: 0.9rem;
+  padding: 0.25rem 0.75rem;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.btn-danger:hover {
+  color: #ff5555;
+  border-color: #ff5555;
+}
+
+.modal-dark .modal-content {
+  background-color: #111;
+  color: #fff;
+}
+
+.modal-dark .modal-header,
+.modal-dark .modal-footer {
+  border-color: #444;
+}
+
+.modal-dark .modal-header .close {
+  color: #fff;
+}
+
+/* Gradient underline for headers */
+.gradient-underline {
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(90deg, #555, #888);
+  border-radius: 2px;
+}
+
+/* Muted text */
+.text-muted {
+  color: #888 !important;
+}
