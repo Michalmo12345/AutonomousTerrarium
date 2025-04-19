@@ -1,17 +1,19 @@
 const pool = require('../db')
 
 const getTerrariums = async (req, res) => {
-  try {
-    const { id: userId } = req.user
-    const result = await pool.query(
-      'SELECT * FROM terrariums WHERE user_id = $1',
-      [userId]
-    )
-    res.json(result.rows)
-  } catch (err) {
-    res.status(500).json({ error: 'Something went wrong' })
-  }
-}
+    try {
+      const { id: userId } = req.user;
+      const { page = 1, limit = 10 } = req.query;
+      const offset = (page - 1) * limit;
+      const result = await pool.query(
+        'SELECT * FROM terrariums WHERE user_id = $1 LIMIT $2 OFFSET $3',
+        [userId, limit, offset]
+      );
+      res.json(result.rows);
+    } catch (err) {
+      res.status(500).json({ error: 'Something went wrong' });
+    }
+  };
 
 const createTerrarium = async (req, res) => {
   try {

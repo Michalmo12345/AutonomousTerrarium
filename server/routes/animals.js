@@ -1,17 +1,11 @@
-const express = require('express')
-const router = express.Router()
+const express = require('express');
+const router = express.Router();
+const { getAnimals, createAnimal } = require('../controllers/animalController');
+const authenticateToken = require('../middleware/authMiddleware');
 
-let animals = []
+router.use(authenticateToken);
 
-router.get('/', (req, res) => {
-  res.json(animals)
-})
+router.get('/', getAnimals);
+router.post('/', createAnimal);
 
-router.post('/', (req, res) => {
-  const { name, species, age } = req.body
-  const newAnimal = { id: Date.now(), name, species, age }
-  animals.push(newAnimal)
-  res.status(201).json(newAnimal)
-})
-
-module.exports = router
+module.exports = router;
