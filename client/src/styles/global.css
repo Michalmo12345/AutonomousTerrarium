@@ -1,0 +1,81 @@
+/* Global Styles */
+
+body {
+    background-color: #121212;  /* Dark background for night mode */
+    color: #e0e0e0;  /* Light text for readability */
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .container {
+    max-width: 450px;
+    padding: 20px;
+  }
+  
+  h1, h3 {
+    text-align: center;
+    color: #ffffff;
+  }
+  
+  input {
+    background-color: #333333;  /* Dark background for input fields */
+    color: #ffffff;  /* Light text in inputs */
+    border: 1px solid #555555;  /* Subtle border */
+  }
+  
+  button {
+    background-color: #007bff;  /* Blue button background */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    width: 100%;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  button:hover {
+    background-color: #0056b3;  /* Darker blue on hover */
+  }
+  
+  .form-container {
+    background-color: #1f1f1f;  /* Dark background for form container */
+    border-radius: 8px;
+    padding: 30px;
+    margin: 20px auto;
+  }
+  
+  .register-link, .login-link {
+    display: block;
+    text-align: center;
+    color: #007bff;
+    margin-top: 15px;
+  }
+  
+  .register-link:hover, .login-link:hover {
+    text-decoration: underline;
+  }
+  
+  .form-header {
+    margin-bottom: 20px;
+  }
+  
+  .container {
+    padding-top: 50px;
+    padding-bottom: 50px;
+  }
+  
+  /* Add custom spacing for error message */
+  .error-message {
+    color: red;
+    font-size: 14px;
+    text-align: center;
+  }
+  
+  .signup-link {
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  .signup-link:hover {
+    text-decoration: underline;
+  }
