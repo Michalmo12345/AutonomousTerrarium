@@ -6,10 +6,10 @@ const authenticateToken = require('../middleware/authMiddleware');
 router.use(authenticateToken);
 
 router.get('/', getTerrariums);
-router.get('/:id', getTerrariumById); // Add this route
+router.get('/:id', getTerrariumById);
+router.get('/:id/temperature-history', getTemperatureHistory);
 router.post('/', createTerrarium);
 router.put('/:id', updateTerrarium);
 router.delete('/:id', deleteTerrarium);
-router.get('/:id/temperature-history', getTemperatureHistory);
 
 module.exports = router;

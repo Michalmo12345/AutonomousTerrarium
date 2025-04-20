@@ -17,7 +17,7 @@ app.use(express.json())
 
 app.use('/api/auth', authRoutes)
 app.use('/api/terrariums', terrariumRoutes)
-app.use('/api/animals', animalRoutes)
+app.use('/api/terrariums', animalRoutes)
 app.use('/api/readings', readingRoutes)
 
 const PORT = process.env.PORT || 5000

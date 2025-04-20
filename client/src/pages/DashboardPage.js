@@ -232,7 +232,7 @@ const DashboardPage = () => {
               <Col md={4} key={terrarium.id}>
                 <Card className="text-white mb-3">
                   <Card.Body>
-                    <Link to={`/terrarium/${terrarium.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <Link to={`/terrariums/${terrarium.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                       <Card.Title>{terrarium.name}</Card.Title>
                       <Card.Text>Temperature: {terrarium.temperature}°C</Card.Text>
                       <Card.Text>Humidity: {terrarium.humidity}%</Card.Text>
