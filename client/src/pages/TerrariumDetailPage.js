@@ -192,13 +192,13 @@ const TerrariumDetailPage = () => {
               <Card.Body>
                 <h3 className="text-white mb-4">Terrarium Overview</h3>
                 <div className="mb-3">
-                  <span className="text-muted">Current Temperature:</span> {terrarium.temperature}°C
+                  <span className="text-white">Current Temperature:</span> {terrarium.temperature}°C
                 </div>
                 <div className="mb-3">
-                  <span className="text-muted">Current Humidity:</span> {terrarium.humidity}%
+                  <span className="text-white">Current Humidity:</span> {terrarium.humidity}%
                 </div>
                 <div className="mb-3">
-                  <span className="text-muted">Last Updated:</span> {
+                  <span className="text-white">Last Updated:</span> {
                     terrarium.updated_at
                       ? new Date(terrarium.updated_at).toLocaleString()
                       : new Date().toLocaleString()
@@ -207,9 +207,9 @@ const TerrariumDetailPage = () => {
                 {latestReading && (
                   <div className="mt-4">
                     <h5 className="text-white">Latest Reading from Sensor</h5>
-                    <div><span className="text-muted">Temperature:</span> {latestReading.temperature}°C</div>
-                    <div><span className="text-muted">Humidity:</span> {latestReading.humidity}%</div>
-                    <div><span className="text-muted">Time:</span> {new Date(latestReading.created_at).toLocaleString()}</div>
+                    <div><span className="text-white">Temperature:</span> {latestReading.temperature}°C</div>
+                    <div><span className="text-white">Humidity:</span> {latestReading.humidity}%</div>
+                    <div><span className="text-white">Time:</span> {new Date(latestReading.created_at).toLocaleString()}</div>
                   </div>
                 )}
               </Card.Body>

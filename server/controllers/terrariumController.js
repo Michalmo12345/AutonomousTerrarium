@@ -77,13 +77,11 @@ const getTerrariumById = async (req, res) => {
   try {
     const { id } = req.params;
     const { id: userId } = req.user;
-    console.log(`Fetching terrarium ID ${id} for user ID ${userId}`); // Debug log
     const result = await pool.query(
       'SELECT * FROM terrariums WHERE id = $1 AND user_id = $2',
       [id, userId]
     );
     if (result.rowCount === 0) {
-      console.log(`Terrarium ID ${id} not found or unauthorized for user ID ${userId}`);
       return res.status(404).json({ error: 'Terrarium not found or unauthorized' });
     }
     res.json(result.rows[0]);
