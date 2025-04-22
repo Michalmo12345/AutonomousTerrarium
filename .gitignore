@@ -1,3 +1,9 @@
 build/
 sdkconfig
 sdkconfig.old
+CMakeFiles/
+config.env
+kconfigs.in
+kconfigs*
+.vscode
+config/
