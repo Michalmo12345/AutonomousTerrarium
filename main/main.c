@@ -80,7 +80,6 @@ void wifi_init_sta(void)
     }
 }
 
-// Funkcja wysyłająca dane metodą POST
 void http_post_task(void *pvParameters)
 {
     while (1)
@@ -113,10 +112,53 @@ void http_post_task(void *pvParameters)
         vTaskDelay(5000 / portTICK_PERIOD_MS); // co 5 sekund
     }
 }
+void http_get_task(void *pvParameters)
+{
+    while (1)
+    {
+        esp_http_client_config_t config = {
+            .url = WEB_SERVER, // np. http://192.168.114.67:5000/data
+        };
+
+        esp_http_client_handle_t client = esp_http_client_init(&config);
+        esp_http_client_set_method(client, HTTP_METHOD_GET);
+        esp_http_client_set_header(client, "Connection", "close");
+
+        esp_err_t err = esp_http_client_perform(client);
+
+        if (err == ESP_OK)
+        {
+            ESP_LOGI(TAG, "HTTP GET Status = %d",
+                     esp_http_client_get_status_code(client));
+
+            // Próbujemy odczytać treść odpowiedzi
+            char buffer[128];
+            int len = esp_http_client_read(client, buffer, sizeof(buffer) - 1);
+
+            if (len > 0)
+            {
+                buffer[len] = '\0';
+                ESP_LOGI(TAG, "Odebrano z serwera: %s", buffer);
+            }
+            else
+            {
+                ESP_LOGW(TAG, "Brak treści mimo poprawnego statusu");
+            }
+        }
+        else
+        {
+            ESP_LOGE(TAG, "HTTP GET request failed: %s", esp_err_to_name(err));
+        }
+
+        esp_http_client_cleanup(client);
+        vTaskDelay(pdMS_TO_TICKS(10000)); // co 10 sekund
+    }
+}
 
 void app_main(void)
 {
     ESP_ERROR_CHECK(nvs_flash_init());
     wifi_init_sta();
     xTaskCreate(http_post_task, "http_post_task", 8192, NULL, 5, NULL);
+    xTaskCreate(http_get_task, "http_get_task", 8192, NULL, 5, NULL);
 }
