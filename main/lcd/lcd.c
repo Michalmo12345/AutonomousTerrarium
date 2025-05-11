@@ -15,7 +15,6 @@
 #define RW 0x02
 #define RS 0x01
 
-// Prosta funkcja do opóźnień w mikrosekundach
 static void delay_us(uint32_t us)
 {
     uint32_t cycles = us * 5; // dostosuj jeśli CPU = 240 MHz
@@ -40,9 +39,9 @@ static void lcd_send_nibble(uint8_t nibble, uint8_t mode)
 {
     uint8_t data = nibble | mode | LCD_BACKLIGHT;
     lcd_write_byte(data | ENABLE);
-    delay_us(1); // zamiast hal_esp_rom_delay_us(1)
+    delay_us(1);
     lcd_write_byte(data & ~ENABLE);
-    delay_us(50); // zamiast hal_esp_rom_delay_us(50)
+    delay_us(50);
 }
 
 static void lcd_send_cmd(uint8_t cmd)
@@ -106,4 +105,17 @@ void lcd_write_str(const char *str)
 {
     while (*str)
         lcd_write_char(*str++);
+}
+
+void lcd_task(void *pvParameters)
+{
+    while (1)
+    {
+        lcd_clear();
+        lcd_gotoxy(0, 0);
+        lcd_write_str("Temp: 23.5C");
+        lcd_gotoxy(0, 1);
+        lcd_write_str("Wilg: 62");
+        vTaskDelay(pdMS_TO_TICKS(2000));
+    }
 }

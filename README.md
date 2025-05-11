@@ -1,32 +1,94 @@
-# _Sample project_
+# ESP_PIAR – System sterowania terrarium z ESP32
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+Projekt oparty na mikrokontrolerze **ESP32**, realizowany w środowisku **ESP-IDF** z wykorzystaniem systemu **FreeRTOS**. System służy do monitorowania i sterowania warunkami panującymi w autonomicznym terrarium: wilgotnością, temperaturą, poziomem wody, oświetleniem i ogrzewaniem.
 
-This is the simplest buildable example. The example is used by command `idf.py create-project`
-that copies the project to user specified path and set it's name. For more information follow the [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
+---
 
+## 🔧 Technologie i biblioteki
 
+- **FreeRTOS** – wielozadaniowość w czasie rzeczywistym
+- **HTTP(S)** – wysyłanie danych do serwera z użyciem `esp_http_client`
+- **I2C** – komunikacja z wyświetlaczem LCD 1602/2004
+- **GPIO** – obsługa czujników i elementów wykonawczych (mata grzewcza, LEDy, zraszacz)
+- **DHT** – odczyt temperatury i wilgotności
 
-## How to use example
-We encourage the users to use the example as a template for the new projects.
-A recommended way is to follow the instructions on a [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project).
+---
 
-## Example folder contents
+## 📁 Struktura projektu
 
-The project **sample_project** contains one source file in C language [main.c](main/main.c). The file is located in folder [main](main).
+Projekt opiera się na podziale na logiczne komponenty:
 
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt`
-files that provide set of directives and instructions describing the project's source files and targets
-(executable, library, or both). 
-
-Below is short explanation of remaining files in the project folder.
 
 ```
+ESP_PIAR/
+├── main/
+│   ├── main.c
+│   ├── lcd/
+│   │   ├── lcd.c
+│   │   └── lcd.h
+│   ├── network/
+│   │   ├── wifi.c
+│   │   ├── wifi.h
+│   │   ├── http_client.c
+│   │   └── http_client.h
+│   ├── shared_data.c
+│   └── shared_data.h
+│
+├── config/
+├── unused/
+│   └── tcp_ip.c
 ├── CMakeLists.txt
-├── main
-│   ├── CMakeLists.txt
-│   └── main.c
-└── README.md                  This is the file you are currently reading
 ```
-Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
-They are not used or needed when building with CMake and idf.py.
+w folderze ESP_PIAR/components znajdują się podstawowe drivery i konfiguracje komponentów dostarczone wraz z środowiskiem esp-idf
+---
+
+## 📦 Funkcjonalności systemu
+
+- ✅ Odczyt temperatury i wilgotności z czujnika DHT
+- ✅ Detekcja poziomu wody (czujnik pływakowy)
+- ✅ Wyświetlanie danych na ekranie LCD przez I2C
+- ✅ Sterowanie LEDami, matą grzewczą, zraszaczami przez GPIO
+- ✅ Obliczanie mocy grzania na podstawie regulatora PI(D)
+- ✅ Wysyłanie danych do serwera HTTP(S) w tle
+- ✅ Wspólna struktura danych dostępna między taskami przez mutex (`FreeRTOS`)
+
+---
+
+## 🔄 Komunikacja między taskami
+
+System wykorzystuje mechanizmy **FreeRTOS** do synchronizacji:
+
+- `shared_data_t` – struktura z aktualnymi danymi systemowymi
+- `xSemaphoreCreateMutex()` – do ochrony dostępu do danych między taskami (np. LCD, czujniki, HTTP)
+
+---
+
+## 📊 Wyświetlacz LCD
+
+- Typ: LCD 1602 lub 2004
+- Interfejs: I2C (np. PCF8574)
+- Wyświetlane dane:
+  - Temperatura i wilgotność
+  - Stan wody (czujnik pływakowy)
+
+---
+
+## 🌐 Sieć
+
+- ESP32 łączy się z siecią Wi-Fi jako klient (`wifi_init_sta`)
+- Dane z czujników wysyłane są na zdalny serwer przez HTTPS (`esp_http_client`)
+
+---
+
+## 🚀 Status
+
+Projekt w fazie implementacji i testowania.
+Planowane dalsze rozszerzenia:
+- zdalna konfiguracja parametrów przez aplikację lub stronę www
+- tryb autonomiczny z lokalną pamięcią w przypadku braku internetu
+
+---
+
+## 📜 Licencja
+
+Projekt edukacyjny/studencki. Do użytku prywatnego, rozwojowego i naukowego.
