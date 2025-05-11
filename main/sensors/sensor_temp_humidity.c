@@ -22,7 +22,6 @@ void sensor_task(void *pvParameters)
                 shared_data.last_update = xTaskGetTickCount();
                 xSemaphoreGive(data_mutex);
             }
-
             ESP_LOGI("SENSOR", "T: %.1f °C  H: %.1f %%", temperature, humidity);
         }
         else

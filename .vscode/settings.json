@@ -12,6 +12,7 @@
         "gpio.h": "c",
         "lcd.h": "c",
         "esp_log.h": "c",
-        "sensor_temp_humidity.h": "c"
+        "sensor_temp_humidity.h": "c",
+        "shared_data.h": "c"
     }
 }
