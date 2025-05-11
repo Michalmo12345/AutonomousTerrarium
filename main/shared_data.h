@@ -12,5 +12,18 @@ typedef struct
     TickType_t last_update;
 } system_data_t;
 
+typedef struct
+{
+    float target_temperature;
+    float target_humidity;
+    bool sprinkler_enabled;
+    bool leds_enabled;
+    float heater_power_limit;
+    TickType_t last_updated;
+} app_settings_t;
+
 extern system_data_t shared_data;
+extern app_settings_t app_settings;
+
 extern SemaphoreHandle_t data_mutex;
+extern SemaphoreHandle_t settings_mutex;

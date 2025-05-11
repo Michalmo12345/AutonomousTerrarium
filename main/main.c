@@ -15,6 +15,7 @@ void app_main(void)
 {
     ESP_ERROR_CHECK(nvs_flash_init());
     data_mutex = xSemaphoreCreateMutex();
+    settings_mutex = xSemaphoreCreateMutex();
     if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(100)))
     {
         shared_data.humidity = 50.0;
