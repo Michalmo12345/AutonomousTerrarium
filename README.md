@@ -92,3 +92,10 @@ Planowane dalsze rozszerzenia:
 ## 📜 Licencja
 
 Projekt edukacyjny/studencki. Do użytku prywatnego, rozwojowego i naukowego.
+
+### addidtional info 
+to clone usefull esp liblary 
+```
+cd components/components
+git clone https://github.com/UncleRus/esp-idf-lib.git
+```

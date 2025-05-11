@@ -3,6 +3,8 @@
 #include <string.h>
 #include <freertos/task.h>
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "shared_data.h"
 
 #define I2C_PORT I2C_NUM_0
 #define I2C_SDA 21
@@ -109,13 +111,28 @@ void lcd_write_str(const char *str)
 
 void lcd_task(void *pvParameters)
 {
+    char line1[17], line2[17];
+
     while (1)
     {
+        float t = 0.0f, h = 0.0f;
+
+        if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(100)))
+        {
+            t = shared_data.temperature;
+            h = shared_data.humidity;
+            xSemaphoreGive(data_mutex);
+        }
+
+        snprintf(line1, sizeof(line1), "Temp: %.1fC", t);
+        snprintf(line2, sizeof(line2), "Wilg: %.0f%%", h);
+
         lcd_clear();
         lcd_gotoxy(0, 0);
-        lcd_write_str("Temp: 23.5C");
+        lcd_write_str(line1);
         lcd_gotoxy(0, 1);
-        lcd_write_str("Wilg: 62");
+        lcd_write_str(line2);
+
         vTaskDelay(pdMS_TO_TICKS(2000));
     }
 }
