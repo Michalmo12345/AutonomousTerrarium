@@ -5,9 +5,7 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_netif.h"
-
-#define WIFI_SSID "MichalA55"
-#define WIFI_PASS "xuic1259"
+#include "config.h"
 
 static const char *TAG = "WIFI";
 static EventGroupHandle_t wifi_event_group;

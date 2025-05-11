@@ -5,8 +5,8 @@
 #include "esp_http_client.h"
 #include <string.h>
 #include <stdlib.h>
+#include "config.h"
 
-#define WEB_SERVER "http://192.168.114.67:5000/data"
 static const char *TAG = "HTTP_CLIENT";
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
