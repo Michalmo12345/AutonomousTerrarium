@@ -2,6 +2,7 @@ idf_component_register(
     SRCS "main.c"
          "network/wifi.c"
          "network/http_client.c"
+         "lcd/lcd.c"
     INCLUDE_DIRS "."
-                 "network"
+                 "network" "lcd"
 )

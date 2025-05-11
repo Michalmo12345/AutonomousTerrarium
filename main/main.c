@@ -170,11 +170,17 @@
 #include "wifi.h"
 #include "http_client.h"
 #include "nvs_flash.h"
+#include "lcd.h"
 
 void app_main(void)
 {
     ESP_ERROR_CHECK(nvs_flash_init());
     wifi_init_sta();
+    lcd_init();
+    lcd_gotoxy(0, 0);
+    lcd_write_str("Terrarium");
+    lcd_gotoxy(0, 1);
+    lcd_write_str("Dziala! :)");
     xTaskCreate(http_get_task, "http_get_task", 8192, NULL, 5, NULL);
     xTaskCreate(http_post_task, "http_post_task", 8192, NULL, 5, NULL);
 }
