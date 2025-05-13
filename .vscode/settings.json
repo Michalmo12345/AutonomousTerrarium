@@ -13,6 +13,9 @@
         "lcd.h": "c",
         "esp_log.h": "c",
         "sensor_temp_humidity.h": "c",
-        "shared_data.h": "c"
+        "shared_data.h": "c",
+        "led_strip.h": "c",
+        "rmt_tx.h": "c",
+        "rmt_rx.h": "c"
     }
 }

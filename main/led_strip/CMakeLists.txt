@@ -1,2 +1,2 @@
-idf_component_register(SRCS "led_strip.c"
+idf_component_register(SRCS "led_rgb.c"
                        INCLUDE_DIRS ".")

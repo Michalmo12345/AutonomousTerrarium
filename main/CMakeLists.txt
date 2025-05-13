@@ -5,6 +5,9 @@ idf_component_register(
          "lcd/lcd.c"
          "shared_data.c"
          "sensors/sensor_temp_humidity.c"
+         "led_strip/led_rgb.c"
+         "pid/pid.c"
+         "control/heater_control.c"
     INCLUDE_DIRS "."
-                 "network" "lcd" "sensors"
+                 "network" "lcd" "sensors" "led_strip" "pid" "control"
 )

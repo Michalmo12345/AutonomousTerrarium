@@ -10,12 +10,17 @@
 #include "lcd.h"
 #include "shared_data.h"
 #include "sensor_temp_humidity.h"
+#include "pid.h"
 
+PID_t pid;
 void app_main(void)
 {
     ESP_ERROR_CHECK(nvs_flash_init());
     data_mutex = xSemaphoreCreateMutex();
     settings_mutex = xSemaphoreCreateMutex();
+
+    pid_init(&pid, 2.0, 5.0, 1.0, 25.0); // example values
+
     if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(100)))
     {
         shared_data.humidity = 50.0;
