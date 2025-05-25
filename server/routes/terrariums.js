@@ -13,4 +13,12 @@ router.put('/:id', updateTerrarium);
 router.delete('/:id', deleteTerrarium);
 router.get('/:id/settings', getSettings);
 
+router.put('/:id/day', setDayMode)
+router.put('/:id/temperature', setTargetTemperature)
+router.put('/:id/leds', setLedsEnabled)
+router.put('/:id/color', setColor)
+
+router.put('/:id/manual-mode', setManualMode)
+router.put('/:id/sprinkler', setSprinklerEnabled)
+router.put('/:id/heater', setHeaterEnabled)
 module.exports = router;

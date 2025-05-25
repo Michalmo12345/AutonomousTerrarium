@@ -1,24 +1,39 @@
 const pool = require('../db')
 
-// Create a new reading for a terrarium
 const createReading = async (req, res) => {
   try {
     const { terrariumId } = req.params
-    const { temperature, humidity } = req.body
+    const {
+      temperature,
+      humidity,
+      water_level_ok,
+      heater_on,
+      sprinkler_on,
+      leds_on
+    } = req.body
 
     const result = await pool.query(
-      'INSERT INTO readings (terrarium_id, temperature, humidity) VALUES ($1, $2, $3) RETURNING *',
-      [terrariumId, temperature, humidity]
+      `INSERT INTO readings (
+        terrarium_id, temperature, humidity,
+        water_level_ok, heater_on, sprinkler_on, leds_on
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *`,
+      [
+        terrariumId,
+        temperature,
+        humidity,
+        water_level_ok ?? false,
+        heater_on ?? false,
+        sprinkler_on ?? false,
+        leds_on ?? false
+      ]
     )
-
     res.status(201).json(result.rows[0])
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Something went wrong' })
   }
 }
-
-// Get all readings for a specific terrarium
 const getReadings = async (req, res) => {
   try {
     const { terrariumId } = req.params
