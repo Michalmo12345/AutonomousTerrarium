@@ -16,7 +16,6 @@ app.use(express.json())
 
 app.use('/api/auth', authRoutes)
 app.use('/api/terrariums', terrariumRoutes)
-app.use('/api/terrariums', animalRoutes)
 app.use('/api/readings', readingRoutes)
 
 app.listen(5000, () => console.log(`Server running on port 5000`))
