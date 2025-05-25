@@ -1,4 +1,4 @@
-import { Container, Row, Col, Button, Spinner, Alert, Card } from 'react-bootstrap';
+import { Container, Row, Col, Button, Spinner, Alert, Card, Table, Form } from 'react-bootstrap';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../authContext';
@@ -20,43 +20,30 @@ const TerrariumDetailPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // fetch terrarium settings + readings
   useEffect(() => {
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-
+    if (!token) return navigate('/login');
     const fetchAll = async () => {
       setIsLoading(true);
       try {
-        const { data: t } = await axios.get(
-          `${BASE_URL}/terrariums/${id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const { data: t } = await axios.get(`${BASE_URL}/terrariums/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setTerrarium(t);
-
-        const { data: r } = await axios.get(
-          `${BASE_URL}/readings/${id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const { data: r } = await axios.get(`${BASE_URL}/readings/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setReadings(r);
       } catch (err) {
-        if (err.response?.status === 401 || err.response?.status === 403) {
-          setError('Not authorized — please log in again.');
-          navigate('/login');
-        } else {
-          setError(err.response?.data?.error || 'Failed to load data');
-        }
+        const status = err.response?.status;
+        if (status === 401 || status === 403) return navigate('/login');
+        setError(err.response?.data?.error || 'Failed to load data');
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchAll();
   }, [id, token, navigate]);
 
-  // generic updater for any terrarium field
   const handleUpdate = async (updates) => {
     try {
       const { data } = await axios.put(
@@ -70,88 +57,95 @@ const TerrariumDetailPage = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <>
-        <NavBar />
-        <Container className="py-5 text-center">
-          <Spinner animation="border" />
-        </Container>
-      </>
-    );
-  }
+  const handleDayMode = async (dayValue) => {
+    try {
+      const { data } = await axios.put(
+        `${BASE_URL}/terrariums/${id}/day`,
+        { day: dayValue },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTerrarium(prev => ({ ...prev, day: data.day }));
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to switch day/night');
+    }
+  };
 
-  if (error) {
-    return (
-      <>
-        <NavBar />
-        <Container className="py-5">
-          <Alert variant="danger">{error}</Alert>
-          <Link to="/dashboard" className="btn btn-outline-light">Back to Dashboard</Link>
-        </Container>
-      </>
-    );
-  }
+  if (isLoading) return (
+    <><NavBar /><Container className="py-5 text-center"><Spinner animation="border" /></Container></>
+  );
+  if (error) return (
+    <><NavBar /><Container className="py-5"><Alert variant="danger">{error}</Alert><Link to="/dashboard" className="btn btn-outline-light">Back</Link></Container></>
+  );
 
   return (
     <>
       <NavBar />
       <Container className="py-5">
-        <Link to="/dashboard" className="btn btn-outline-light mb-4">← Back to Dashboard</Link>
+        <Link to="/dashboard" className="btn btn-outline-light mb-4">← Dashboard</Link>
         <h1 className="text-white mb-4">{terrarium.name}</h1>
-
         <Row>
-          {/* Left: Controls */}
-          <Col lg={6} className="mb-4">
-            <Card className="p-4 bg-dark text-white h-100">
-              <div className="d-flex justify-content-between mb-3">
-                <h4>Mode: {terrarium.manual_mode ? 'Manual' : 'Automatic'}</h4>
-                <Button
-                  size="sm"
-                  onClick={() => handleUpdate({ manual_mode: !terrarium.manual_mode })}
-                >
-                  Switch to {terrarium.manual_mode ? 'Automatic' : 'Manual'}
-                </Button>
-              </div>
-              {terrarium.manual_mode
-                ? <ManualControlPanel terrarium={terrarium} onUpdate={handleUpdate} />
-                : <AutomaticSettingsPanel terrarium={terrarium} onUpdate={handleUpdate} />
-              }
+          <Col md={6} className="mb-4">
+            <Card bg="dark" text="white" className="h-100">
+              <Card.Header>
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <Form.Check
+                      type="switch"
+                      id="day-night-switch"
+                      label={terrarium.day ? 'Day Mode' : 'Night Mode'}
+                      checked={terrarium.day}
+                      onChange={() => handleDayMode(!terrarium.day)}
+                    />
+                  </div>
+                  <Button size="sm" onClick={() => handleUpdate({ manual_mode: !terrarium.manual_mode })}>
+                    Switch to {terrarium.manual_mode ? 'Automatic' : 'Manual'}
+                  </Button>
+                </div>
+              </Card.Header>
+              <Card.Body>
+                {terrarium.manual_mode
+                  ? <ManualControlPanel terrarium={terrarium} onUpdate={handleUpdate} />
+                  : <AutomaticSettingsPanel terrarium={terrarium} onUpdate={handleUpdate} />
+                }
+              </Card.Body>
             </Card>
           </Col>
 
-          {/* Right: Readings */}
-          <Col lg={6} className="mb-4">
-            <Card className="p-4 bg-dark text-white h-100">
-              <h4 className="mb-3">Recent Sensor Readings</h4>
-              {readings.length === 0 ? (
-                <p>No readings available.</p>
-              ) : (
-                <table className="table table-sm table-dark">
-                  <thead>
-                    <tr>
-                      <th>Time</th>
-                      <th>Temp (°C)</th>
-                      <th>Hum (%)</th>
-                      <th>Heater</th>
-                      <th>Sprinkler</th>
-                      <th>LEDs</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {readings.slice(0, 10).map(r => (
-                      <tr key={r.id}>
-                        <td>{new Date(r.created_at).toLocaleString()}</td>
-                        <td>{Number(r.temperature).toFixed(1)}</td>
-                        <td>{Number(r.humidity).toFixed(1)}</td>
-                        <td>{r.heater_on ? 'On' : 'Off'}</td>
-                        <td>{r.sprinkler_on ? 'On' : 'Off'}</td>
-                        <td>{r.leds_on ? 'On' : 'Off'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+          <Col md={6} className="mb-4">
+            <Card bg="dark" text="white" className="h-100">
+              <Card.Header>Recent Readings</Card.Header>
+              <Card.Body className="p-0">
+                {readings.length === 0
+                  ? <div className="p-3">No readings.</div>
+                  : (
+                    <Table
+                      variant="dark"
+                      striped
+                      hover
+                      responsive
+                      className="mb-0"
+                      style={{ maxHeight: '400px', overflowY: 'auto', display: 'block' }}
+                    >
+                      <thead>
+                        <tr>
+                          <th>Time</th><th>Temp</th><th>Hum</th><th>Heater</th><th>Sprinkler</th><th>LEDs</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {readings.slice(0, 10).map(r => (
+                          <tr key={r.id}>
+                            <td>{new Date(r.created_at).toLocaleTimeString()}</td>
+                            <td>{Number(r.temperature).toFixed(1)}</td>
+                            <td>{Number(r.humidity).toFixed(1)}</td>
+                            <td>{r.heater_on ? '✔' : '✖'}</td>
+                            <td>{r.sprinkler_on ? '✔' : '✖'}</td>
+                            <td>{r.leds_on ? '✔' : '✖'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  )}
+              </Card.Body>
             </Card>
           </Col>
         </Row>

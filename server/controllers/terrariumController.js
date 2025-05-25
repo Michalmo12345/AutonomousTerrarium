@@ -158,13 +158,19 @@ const updateTerrarium = async (req, res) => {
     const { id } = req.params;
     const { name, temperature, humidity } = req.body;
     const { id: userId } = req.user;
-    const terrariumResult = await pool.query('SELECT day FROM terrariums WHERE id = $1', [id])
-    if (terrariumResult.rows.length === 0) return res.status(404).json({ error: 'Terrarium not found' })
 
-      const { day } = terrariumResult.rows[0]
-      const column = day ? 'day_temperature' : 'night_temperature'
+    // Fetch current mode (day vs night)
+    const { rows } = await pool.query(
+      'SELECT day FROM terrariums WHERE id = $1 AND user_id = $2',
+      [id, userId]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Terrarium not found or unauthorized' });
+    }
+    const { day } = rows[0];
 
-    if (!name || !temperature || !humidity) {
+    // Validate inputs
+    if (!name || temperature == null || humidity == null) {
       return res.status(400).json({ error: 'Name, temperature, and humidity are required' });
     }
     if (
@@ -173,18 +179,34 @@ const updateTerrarium = async (req, res) => {
     ) {
       return res.status(400).json({ error: 'Temperature and humidity must be numbers between 0 and 100' });
     }
+
+    // Determine which columns to update
+    const tempCol = day ? 'day_temperature' : 'night_temperature';
+    const humCol = day ? 'day_humidity_target' : 'night_humidity_target';
+
+    // Perform update and return full updated row
     const result = await pool.query(
-      `UPDATE terrariums SET name = $1, ${column}= $2, humidity = $3 WHERE id = $4 AND user_id = $5 RETURNING name,${column},humidity`,
+      `UPDATE terrariums
+       SET name = $1,
+           ${tempCol} = $2,
+           ${humCol} = $3
+       WHERE id = $4 AND user_id = $5
+       RETURNING *, ${tempCol} AS temperature, ${humCol} AS humidity`,
       [name, temperature, humidity, id, userId]
     );
+
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Terrarium not found or unauthorized' });
     }
+
+    res.json(result.rows[0]);
   } catch (err) {
     console.error('Error in updateTerrarium:', err);
     res.status(500).json({ error: 'Something went wrong' });
   }
 };
+
+
 
 const setLedsEnabled = async (req, res) => {
   try {
