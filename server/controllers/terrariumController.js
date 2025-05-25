@@ -223,21 +223,28 @@ const setLedsEnabled = async (req, res) => {
 
 const setColor = async (req, res) => {
   try {
-    const { id } = req.params
+    const { id } = req.params;
+    const { color } = req.body;
+
+    if (color == null || typeof color !== 'number') {
+      return res.status(400).json({ error: 'Color (integer) is required and must be a number' });
+    }
 
     const result = await pool.query(
-      'UPDATE terrariums SET color = 1 WHERE id = $1 RETURNING color',
-      [id]
-    )
+      'UPDATE terrariums SET color = $1 WHERE id = $2 RETURNING color',
+      [color, id]
+    );
 
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Terrarium not found' })
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Terrarium not found' });
+    }
 
-    res.json(result.rows[0])
+    res.json(result.rows[0]);
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Something went wrong' })
+    console.error('Error in setColor:', err);
+    res.status(500).json({ error: 'Something went wrong' });
   }
-}
+};
 
 const setManualMode = async (req, res) => {
   try {

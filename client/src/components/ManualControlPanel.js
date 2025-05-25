@@ -1,21 +1,33 @@
 import { Form } from 'react-bootstrap';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const BASE_URL = 'http://13.60.201.150:5000/api';
 
 export default function ManualControlPanel({ terrarium, setTerrarium, token }) {
-  const toggle = async (field, body) => {
-    try {
-      const { data } = await axios.put(
-        `${BASE_URL}/terrariums/${terrarium.id}/${field}`,
-        body,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      // update only that field
-      setTerrarium(prev => ({ ...prev, ...data }));
-    } catch (err) {
-      console.error('Manual toggle failed:', err);
-    }
+  const [color, setColor] = useState(terrarium.color);
+
+  useEffect(() => {
+    setColor(terrarium.color);
+  }, [terrarium.color]);
+
+  const toggleDevice = async (field, routeField) => {
+    const body = { [field]: !terrarium[field] };
+    const { data } = await axios.put(
+      `${BASE_URL}/terrariums/${terrarium.id}/${routeField}`,
+      body,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setTerrarium(prev => ({ ...prev, ...data }));
+  };
+
+  const saveColor = async () => {
+    const { data } = await axios.put(
+      `${BASE_URL}/terrariums/${terrarium.id}/color`,
+      { color: Number(color) },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setTerrarium(prev => ({ ...prev, color: data.color }));
   };
 
   return (
@@ -25,22 +37,34 @@ export default function ManualControlPanel({ terrarium, setTerrarium, token }) {
         id="heater-switch"
         label="Heater"
         checked={terrarium.heater_enabled}
-        onChange={() => toggle('heater', { heater_enabled: !terrarium.heater_enabled })}
+        onChange={() => toggleDevice('heater_enabled', 'heater')}
       />
       <Form.Check
         type="switch"
         id="sprinkler-switch"
         label="Sprinkler"
         checked={terrarium.sprinkler_enabled}
-        onChange={() => toggle('sprinkler', { sprinkler_enabled: !terrarium.sprinkler_enabled })}
+        onChange={() => toggleDevice('sprinkler_enabled', 'sprinkler')}
       />
       <Form.Check
         type="switch"
         id="leds-switch"
         label="LEDs"
         checked={terrarium.leds_enabled}
-        onChange={() => toggle('leds', { leds_enabled: !terrarium.leds_enabled })}
+        onChange={() => toggleDevice('leds_enabled', 'leds')}
       />
+
+      <Form.Group controlId="manualColor" className="mb-3">
+        <Form.Label>Color (integer)</Form.Label>
+        <Form.Control
+          type="number"
+          value={color}
+          onChange={e => setColor(e.target.value)}
+        />
+      </Form.Group>
+      <Button variant="primary" onClick={saveColor}>
+        Save Color
+      </Button>
     </Form>
   );
 }

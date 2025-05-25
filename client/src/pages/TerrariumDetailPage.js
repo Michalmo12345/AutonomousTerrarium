@@ -67,19 +67,6 @@ export default function TerrariumDetailPage() {
     }
   };
 
-  const handleGenericUpdate = async updates => {
-    try {
-      const { data } = await axios.put(
-        `${BASE_URL}/terrariums/${id}`,
-        updates,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setTerrarium(prev => ({ ...prev, ...data }));
-    } catch (err) {
-      setError(err.response?.data?.error || 'Update failed');
-    }
-  };
-
   if (loading) {
     return <><NavBar /><Container className="py-5 text-center"><Spinner animation="border"/></Container></>;
   }
@@ -115,7 +102,7 @@ export default function TerrariumDetailPage() {
               <Card.Body>
                 {terrarium.manual_mode
                   ? <ManualControlPanel terrarium={terrarium} setTerrarium={setTerrarium} token={token} />
-                  : <AutomaticSettingsPanel terrarium={terrarium} onUpdate={handleGenericUpdate} />
+                  : <AutomaticSettingsPanel terrarium={terrarium} token={token} id={id} setTerrarium={setTerrarium} />
                 }
               </Card.Body>
             </Card>
