@@ -1,242 +1,229 @@
-import { Container, Row, Col, Card, Form, Button, Alert, Modal, ToggleButtonGroup, ToggleButton } from 'react-bootstrap'
-import { useParams, Link, useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
-import { useAuth } from '../authContext'
-import axios from 'axios'
-import NavBar from '../components/NavBar'
-
-const API_BASE = 'http://13.60.201.150:5000/api'
+import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Button, Alert, Modal, Form } from 'react-bootstrap';
+import NavBar from '../components/NavBar';
+import { useAuth } from '../authContext';
+import {
+  getTerrarium,
+  getLatestReading,
+  updateTerrarium,
+  deleteTerrarium,
+  updateManualDevices,
+  updateAutomaticSettings
+} from '../api';
 
 const TerrariumDetailPage = () => {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const { token } = useAuth()
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { token } = useAuth();
 
-  const [terrarium, setTerrarium] = useState(null)
-  const [mode, setMode] = useState('manual')
-  const [manualSettings, setManualSettings] = useState({ led: false, heat: false, sprinkler: false })
-  const [autoSettings, setAutoSettings] = useState({
-    dayStart: '08:00',
-    nightStart: '20:00',
+  const [terrarium, setTerrarium] = useState(null);
+  const [latestReading, setLatestReading] = useState(null);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [mode, setMode] = useState('manual');
+  const [formState, setFormState] = useState({
+    temperature: '',
+    humidity: '',
+    leds: false,
+    heating: false,
+    sprinkler: false,
     dayTemp: '',
     nightTemp: '',
     dayHumidity: '',
     nightHumidity: ''
-  })
-  const [latestReading, setLatestReading] = useState(null)
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  });
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!token) {
-        setError('Please log in to view this page.')
-        navigate('/login')
-        return
-      }
-
-      setIsLoading(true)
-      setError('')
-
+      setIsLoading(true);
       try {
-        const [terrariumRes, readingsRes] = await Promise.all([
-          axios.get(`${API_BASE}/terrariums/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${API_BASE}/readings/${id}`, { headers: { Authorization: `Bearer ${token}` } })
-        ])
-
-        setTerrarium(terrariumRes.data)
-        setAutoSettings(prev => ({ ...prev, 
-          dayTemp: terrariumRes.data.day_temperature,
-          nightTemp: terrariumRes.data.night_temperature,
-          dayHumidity: terrariumRes.data.day_humidity,
-          nightHumidity: terrariumRes.data.night_humidity
-        }))
-
-        if (readingsRes.data.length > 0) setLatestReading(readingsRes.data[0])
+        const terrariumData = await getTerrarium(id, token);
+        const reading = await getLatestReading(id, token);
+        setTerrarium(terrariumData);
+        setFormState({
+          temperature: terrariumData.temperature,
+          humidity: terrariumData.humidity,
+          leds: terrariumData.leds,
+          heating: terrariumData.heating,
+          sprinkler: terrariumData.sprinkler,
+          dayTemp: terrariumData.day_temp,
+          nightTemp: terrariumData.night_temp,
+          dayHumidity: terrariumData.day_humidity,
+          nightHumidity: terrariumData.night_humidity
+        });
+        if (reading) setLatestReading(reading);
       } catch (err) {
-        handleError(err)
-      } finally {
-        setIsLoading(false)
+        setError('Failed to fetch terrarium details');
       }
-    }
-
-    fetchData()
-  }, [id, token, navigate])
-
-  const handleError = (err) => {
-    if (err.response) {
-      if (err.response.status === 401 || err.response.status === 403) setError('You are not authorized to view this terrarium.')
-      else setError(err.response.data?.error || 'Failed to load terrarium details')
-    } else setError('Unable to connect to the server.')
-  }
-
-  const handleModeChange = (val) => setMode(val)
-
-  const handleUpdate = async () => {
-    try {
-      const updated = mode === 'manual'
-        ? { mode: 'manual', ...manualSettings }
-        : { mode: 'automatic', ...autoSettings }
-
-      await axios.put(`${API_BASE}/terrariums/${id}/settings`, updated, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-
-      setError('')
-    } catch (err) {
-      handleError(err)
-    }
-  }
+      setIsLoading(false);
+    };
+    fetchData();
+  }, [id, token]);
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${API_BASE}/terrariums/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      navigate('/dashboard')
+      await deleteTerrarium(id, token);
+      navigate('/dashboard');
     } catch (err) {
-      handleError(err)
-      setShowDeleteModal(false)
+      setError('Failed to delete terrarium');
     }
-  }
+  };
 
-  const renderManualForm = () => (
-    <>
-      {['led', 'heat', 'sprinkler'].map((device) => (
-        <Form.Check
-          key={device}
-          type="switch"
-          label={`Turn ${device} ${manualSettings[device] ? 'Off' : 'On'}`}
-          checked={manualSettings[device]}
-          onChange={() => setManualSettings(prev => ({ ...prev, [device]: !prev[device] }))}
-          className="mb-3 text-white"
-        />
-      ))}
-    </>
-  )
+  const handleSubmit = async () => {
+    try {
+      if (mode === 'manual') {
+        await updateManualDevices(id, {
+          leds: formState.leds,
+          heating: formState.heating,
+          sprinkler: formState.sprinkler
+        }, token);
+      } else {
+        await updateAutomaticSettings(id, {
+          day_temp: formState.dayTemp,
+          night_temp: formState.nightTemp,
+          day_humidity: formState.dayHumidity,
+          night_humidity: formState.nightHumidity
+        }, token);
+      }
+      const updated = await getTerrarium(id, token);
+      setTerrarium(updated);
+    } catch (err) {
+      setError('Update failed');
+    }
+  };
 
-  const renderAutoForm = () => (
-    <>
-      <Form.Group className="mb-3">
-        <Form.Label>Day Start Time</Form.Label>
-        <Form.Control
-          type="time"
-          value={autoSettings.dayStart}
-          onChange={(e) => setAutoSettings(prev => ({ ...prev, dayStart: e.target.value }))}
-        />
-      </Form.Group>
-      <Form.Group className="mb-3">
-        <Form.Label>Night Start Time</Form.Label>
-        <Form.Control
-          type="time"
-          value={autoSettings.nightStart}
-          onChange={(e) => setAutoSettings(prev => ({ ...prev, nightStart: e.target.value }))}
-        />
-      </Form.Group>
-      <Row>
-        <Col>
-          <Form.Group className="mb-3">
-            <Form.Label>Day Temperature (°C)</Form.Label>
-            <Form.Control
-              type="number"
-              value={autoSettings.dayTemp}
-              onChange={(e) => setAutoSettings(prev => ({ ...prev, dayTemp: e.target.value }))}
-            />
-          </Form.Group>
-        </Col>
-        <Col>
-          <Form.Group className="mb-3">
-            <Form.Label>Night Temperature (°C)</Form.Label>
-            <Form.Control
-              type="number"
-              value={autoSettings.nightTemp}
-              onChange={(e) => setAutoSettings(prev => ({ ...prev, nightTemp: e.target.value }))}
-            />
-          </Form.Group>
-        </Col>
-      </Row>
-      <Row>
-        <Col>
-          <Form.Group className="mb-3">
-            <Form.Label>Day Humidity (%)</Form.Label>
-            <Form.Control
-              type="number"
-              value={autoSettings.dayHumidity}
-              onChange={(e) => setAutoSettings(prev => ({ ...prev, dayHumidity: e.target.value }))}
-            />
-          </Form.Group>
-        </Col>
-        <Col>
-          <Form.Group className="mb-3">
-            <Form.Label>Night Humidity (%)</Form.Label>
-            <Form.Control
-              type="number"
-              value={autoSettings.nightHumidity}
-              onChange={(e) => setAutoSettings(prev => ({ ...prev, nightHumidity: e.target.value }))}
-            />
-          </Form.Group>
-        </Col>
-      </Row>
-    </>
-  )
+  const handleChange = (field, value) => {
+    setFormState(prev => ({ ...prev, [field]: value }));
+  };
 
   if (isLoading) {
-    return (
-      <>
-        <NavBar />
-        <Container className="py-5"><p className="text-white">Loading...</p></Container>
-      </>
-    )
+    return <><NavBar /><Container><p className="text-white">Loading...</p></Container></>;
   }
 
   if (error) {
     return (
-      <>
-        <NavBar />
-        <Container className="py-5">
-          <Alert variant="danger">{error}</Alert>
-          <Link to="/dashboard" className="btn btn-outline-light">Back to Dashboard</Link>
-        </Container>
-      </>
-    )
+      <><NavBar /><Container><Alert variant="danger">{error}</Alert></Container></>
+    );
   }
 
   return (
     <>
       <NavBar />
       <Container className="py-5">
-        <Link to="/dashboard" className="btn btn-outline-light mb-3">← Back to Dashboard</Link>
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h1 className="text-white fw-bold mb-0">{terrarium.name}</h1>
-          <div className="d-flex gap-2">
-            <Button variant="primary" onClick={handleUpdate}>Save Settings</Button>
-            <Button variant="danger" onClick={() => setShowDeleteModal(true)}>Delete Terrarium</Button>
+        <div className="mb-4">
+          <Link to="/dashboard" className="btn btn-outline-light mb-3">← Back to Dashboard</Link>
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h1 className="text-white display-5 fw-bold mb-0">{terrarium.name}</h1>
+            <div className="d-flex gap-2">
+              <Button variant="primary" onClick={handleSubmit}>Save</Button>
+              <Button variant="danger" onClick={() => setShowDeleteModal(true)}>Delete</Button>
+            </div>
           </div>
+          <div className="gradient-underline mb-4"></div>
         </div>
 
-        <ToggleButtonGroup type="radio" name="mode" value={mode} onChange={handleModeChange} className="mb-4">
-          <ToggleButton id="manual-btn" variant="outline-light" value="manual">Manual</ToggleButton>
-          <ToggleButton id="auto-btn" variant="outline-light" value="automatic">Automatic</ToggleButton>
-        </ToggleButtonGroup>
+        <Row>
+          <Col md={6} className="mb-4">
+            <Card className="text-white">
+              <Card.Body>
+                <Form>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Mode</Form.Label>
+                    <Form.Select value={mode} onChange={(e) => setMode(e.target.value)} className="bg-dark text-white border-light">
+                      <option value="manual">Manual</option>
+                      <option value="automatic">Automatic</option>
+                    </Form.Select>
+                  </Form.Group>
 
-        <Card className="text-white mb-4">
-          <Card.Body>
-            <h3>{mode === 'manual' ? 'Manual Controls' : 'Automatic Settings'}</h3>
-            <Form>{mode === 'manual' ? renderManualForm() : renderAutoForm()}</Form>
-          </Card.Body>
-        </Card>
+                  {mode === 'manual' ? (
+                    <>
+                      <Form.Check
+                        type="switch"
+                        label="LEDs"
+                        checked={formState.leds}
+                        onChange={(e) => handleChange('leds', e.target.checked)}
+                        className="text-white"
+                      />
+                      <Form.Check
+                        type="switch"
+                        label="Heating"
+                        checked={formState.heating}
+                        onChange={(e) => handleChange('heating', e.target.checked)}
+                        className="text-white"
+                      />
+                      <Form.Check
+                        type="switch"
+                        label="Sprinkler"
+                        checked={formState.sprinkler}
+                        onChange={(e) => handleChange('sprinkler', e.target.checked)}
+                        className="text-white"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Day Temperature (°C)</Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={formState.dayTemp}
+                          onChange={(e) => handleChange('dayTemp', e.target.value)}
+                          className="bg-dark text-white border-light"
+                        />
+                      </Form.Group>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Night Temperature (°C)</Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={formState.nightTemp}
+                          onChange={(e) => handleChange('nightTemp', e.target.value)}
+                          className="bg-dark text-white border-light"
+                        />
+                      </Form.Group>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Day Humidity (%)</Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={formState.dayHumidity}
+                          onChange={(e) => handleChange('dayHumidity', e.target.value)}
+                          className="bg-dark text-white border-light"
+                        />
+                      </Form.Group>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Night Humidity (%)</Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={formState.nightHumidity}
+                          onChange={(e) => handleChange('nightHumidity', e.target.value)}
+                          className="bg-dark text-white border-light"
+                        />
+                      </Form.Group>
+                    </>
+                  )}
+                </Form>
+              </Card.Body>
+            </Card>
+          </Col>
 
-        {latestReading && (
-          <Card className="text-white">
-            <Card.Body>
-              <h4>Latest Reading</h4>
-              <div>Temperature: {latestReading.temperature}°C</div>
-              <div>Humidity: {latestReading.humidity}%</div>
-              <div>Time: {new Date(latestReading.created_at).toLocaleString()}</div>
-            </Card.Body>
-          </Card>
-        )}
+          <Col md={6} className="mb-4">
+            <Card className="text-white">
+              <Card.Body>
+                <h4 className="text-white">Current State</h4>
+                <p><strong>Temperature:</strong> {terrarium.temperature}°C</p>
+                <p><strong>Humidity:</strong> {terrarium.humidity}%</p>
+                {latestReading && (
+                  <div className="mt-3">
+                    <h5 className="text-white">Latest Sensor Reading</h5>
+                    <p><strong>Temperature:</strong> {latestReading.temperature}°C</p>
+                    <p><strong>Humidity:</strong> {latestReading.humidity}%</p>
+                    <p><strong>Time:</strong> {new Date(latestReading.created_at).toLocaleString()}</p>
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
 
         <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered dialogClassName="modal-dark">
           <Modal.Header closeButton className="bg-dark text-white border-light">
@@ -247,13 +234,17 @@ const TerrariumDetailPage = () => {
             <p className="text-danger">This action cannot be undone.</p>
           </Modal.Body>
           <Modal.Footer className="bg-dark border-light">
-            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
-            <Button variant="danger" onClick={handleDelete}>Delete</Button>
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDelete}>
+              Delete
+            </Button>
           </Modal.Footer>
         </Modal>
       </Container>
     </>
-  )
-}
+  );
+};
 
-export default TerrariumDetailPage
+export default TerrariumDetailPage;
