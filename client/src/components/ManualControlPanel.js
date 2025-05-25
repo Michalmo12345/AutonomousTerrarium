@@ -1,10 +1,11 @@
-import { Form } from 'react-bootstrap';
+import { Form, Button } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const BASE_URL = 'http://13.60.201.150:5000/api';
 
 export default function ManualControlPanel({ terrarium, setTerrarium, token }) {
+  // local color state for manual panel
   const [color, setColor] = useState(terrarium.color);
 
   useEffect(() => {
@@ -12,22 +13,30 @@ export default function ManualControlPanel({ terrarium, setTerrarium, token }) {
   }, [terrarium.color]);
 
   const toggleDevice = async (field, routeField) => {
-    const body = { [field]: !terrarium[field] };
-    const { data } = await axios.put(
-      `${BASE_URL}/terrariums/${terrarium.id}/${routeField}`,
-      body,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setTerrarium(prev => ({ ...prev, ...data }));
+    try {
+      const body = { [field]: !terrarium[field] };
+      const { data } = await axios.put(
+        `${BASE_URL}/terrariums/${terrarium.id}/${routeField}`,
+        body,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTerrarium(prev => ({ ...prev, ...data }));
+    } catch (err) {
+      console.error('Toggle failed:', err);
+    }
   };
 
   const saveColor = async () => {
-    const { data } = await axios.put(
-      `${BASE_URL}/terrariums/${terrarium.id}/color`,
-      { color: Number(color) },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setTerrarium(prev => ({ ...prev, color: data.color }));
+    try {
+      const { data } = await axios.put(
+        `${BASE_URL}/terrariums/${terrarium.id}/color`,
+        { color: Number(color) },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTerrarium(prev => ({ ...prev, color: data.color }));
+    } catch (err) {
+      console.error('Save color failed:', err);
+    }
   };
 
   return (
