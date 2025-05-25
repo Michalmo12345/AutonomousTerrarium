@@ -1,229 +1,246 @@
+import { Container, Row, Col, Card, Form, Button, Alert, Modal } from 'react-bootstrap';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Alert, Form } from 'react-bootstrap';
-
-const API_BASE = 'http://13.60.201.150:5000/api'
+import { useAuth } from '../authContext';
+import axios from 'axios';
+import NavBar from '../components/NavBar';
 
 const TerrariumDetailPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { token } = useAuth();
 
   const [terrarium, setTerrarium] = useState(null);
+  const [temperature, setTemperature] = useState('');
+  const [humidity, setHumidity] = useState('');
   const [latestReading, setLatestReading] = useState(null);
-  const [mode, setMode] = useState('manual');
-  const [formState, setFormState] = useState({
-    leds: false,
-    heating: false,
-    sprinkler: false,
-    dayTemp: '',
-    nightTemp: '',
-    dayHumidity: '',
-    nightHumidity: ''
-  });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // Fetch terrarium and latest reading on mount or id change
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const resTerrarium = await fetch(`${API_BASE}/${id}`);
-        if (!resTerrarium.ok) throw new Error('Failed to fetch terrarium');
-        const terrariumData = await resTerrarium.json();
+      if (!token) {
+        setError('Please log in to view this page.');
+        navigate('/login');
+        return;
+      }
 
-        setTerrarium(terrariumData);
-        setMode(terrariumData.manual_mode ? 'manual' : 'automatic');
-        setFormState({
-          leds: terrariumData.leds || false,
-          heating: terrariumData.heating || false,
-          sprinkler: terrariumData.sprinkler || false,
-          dayTemp: terrariumData.day_temp || '',
-          nightTemp: terrariumData.night_temp || '',
-          dayHumidity: terrariumData.day_humidity || '',
-          nightHumidity: terrariumData.night_humidity || ''
+      setIsLoading(true);
+      setError('');
+
+      try {
+        const terrariumResponse = await axios.get(`http://13.60.201.150:5000/api/terrariums/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
 
-        const resReading = await fetch(`${API_BASE}/${id}/latest-reading`);
-        if (resReading.ok) {
-          const readingData = await resReading.json();
-          setLatestReading(readingData);
+        const readingsResponse = await axios.get(`http://13.60.201.150:5000/api/readings/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const terrariumData = terrariumResponse.data;
+        setTerrarium(terrariumData);
+        setTemperature(terrariumData.temperature);
+        setHumidity(terrariumData.humidity);
+
+        if (readingsResponse.data.length > 0) {
+          setLatestReading(readingsResponse.data[0]);
         }
       } catch (err) {
-        setError(err.message);
+        handleError(err);
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchData();
-  }, [id]);
+  }, [id, token, navigate]);
 
-  // When mode changes, update backend manually via /manual-mode endpoint
-  const handleModeChange = async (newMode) => {
-    setMode(newMode);
-    try {
-      await fetch(`${API_BASE}/${id}/manual-mode`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ manual_mode: newMode === 'manual' }),
-      });
-    } catch {
-      setError('Failed to update mode');
+  const handleError = (err) => {
+    if (err.response) {
+      if (err.response.status === 401 || err.response.status === 403) {
+        setError('You are not authorized to view this terrarium.');
+      } else {
+        setError(err.response.data?.error || 'Failed to load terrarium details');
+      }
+    } else {
+      setError('Unable to connect to the server.');
     }
   };
 
-  // Handle toggle for manual devices: update immediately
-  const handleManualToggle = async (field, value) => {
-    setFormState(prev => ({ ...prev, [field]: value }));
+  const handleUpdate = async () => {
+    if (!temperature || !humidity) {
+      setError('Temperature and humidity are required');
+      return;
+    }
+
     try {
-      await fetch(`${API_BASE}/${id}/manual-devices`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          [field]: value
-        }),
-      });
-    } catch {
-      setError('Failed to update manual device');
+      const updatedData = {
+        name: terrarium.name,
+        temperature: Number(temperature),
+        humidity: Number(humidity)
+      };
+
+      const response = await axios.put(
+        `http://13.60.201.150:5000/api/terrariums/${id}`,
+        updatedData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setTerrarium(response.data);
+      setError('');
+    } catch (err) {
+      handleError(err);
     }
   };
 
-  // Handle changes in automatic mode inputs (no backend call yet)
-  const handleAutomaticChange = (field, value) => {
-    setFormState(prev => ({ ...prev, [field]: value }));
-  };
-
-  // Save button handler in automatic mode
-  const handleSaveAutomatic = async () => {
-    setIsSaving(true);
+  const handleDelete = async () => {
     try {
-      await fetch(`${API_BASE}/${id}/automatic-settings`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          day_temp: formState.dayTemp,
-          night_temp: formState.nightTemp,
-          day_humidity: formState.dayHumidity,
-          night_humidity: formState.nightHumidity
-        }),
+      await axios.delete(`http://13.60.201.150:5000/api/terrariums/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-    } catch {
-      setError('Failed to save automatic settings');
-    } finally {
-      setIsSaving(false);
+      navigate('/dashboard');
+    } catch (err) {
+      handleError(err);
+      setShowDeleteModal(false);
     }
   };
 
-  if (isLoading) return <Container><p>Loading...</p></Container>;
-  if (error) return <Container><Alert variant="danger">{error}</Alert></Container>;
+  if (isLoading) {
+    return (
+      <>
+        <NavBar />
+        <Container className="py-5">
+          <p className="text-white">Loading...</p>
+        </Container>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <NavBar />
+        <Container className="py-5">
+          <Alert variant="danger">{error}</Alert>
+          <Link to="/dashboard" className="btn btn-outline-light">Back to Dashboard</Link>
+        </Container>
+      </>
+    );
+  }
+
+  if (!terrarium) {
+    return (
+      <>
+        <NavBar />
+        <Container className="py-5">
+          <Alert variant="danger">Terrarium data could not be loaded.</Alert>
+          <Link to="/dashboard" className="btn btn-outline-light">Back to Dashboard</Link>
+        </Container>
+      </>
+    );
+  }
 
   return (
-    <Container className="py-5 text-white">
-      <Link to="/dashboard" className="btn btn-outline-light mb-3">← Back to Dashboard</Link>
+    <>
+      <NavBar />
+      <Container className="py-5">
+        <div className="mb-4">
+          <Link to="/dashboard" className="btn btn-outline-light mb-3">← Back to Dashboard</Link>
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h1 className="text-white display-5 fw-bold mb-0">{terrarium.name}</h1>
+            <div className="d-flex gap-2">
+              <Button variant="primary" onClick={handleUpdate}>Update Settings</Button>
+              <Button variant="danger" onClick={() => setShowDeleteModal(true)}>Delete Terrarium</Button>
+            </div>
+          </div>
+          <div className="gradient-underline mb-4"></div>
+        </div>
 
-      <h1 className="mb-4">{terrarium.name}</h1>
+        <Row>
+          <Col lg={6} className="mb-4">
+            <Card className="text-white h-100">
+              <Card.Body>
+                <h3 className="text-white mb-4">Environment Settings</h3>
+                <Form>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Temperature (°C)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      step="0.1"
+                      value={temperature}
+                      onChange={(e) => setTemperature(e.target.value)}
+                      className="bg-dark text-white border-light"
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-0">
+                    <Form.Label>Humidity (%)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      step="0.1"
+                      value={humidity}
+                      onChange={(e) => setHumidity(e.target.value)}
+                      className="bg-dark text-white border-light"
+                    />
+                  </Form.Group>
+                </Form>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col lg={6} className="mb-4">
+            <Card className="text-white h-100">
+              <Card.Body>
+                <h3 className="text-white mb-4">Terrarium Overview</h3>
+                <div className="mb-3">
+                  <span className="text-white">Current Temperature:</span> {terrarium.temperature}°C
+                </div>
+                <div className="mb-3">
+                  <span className="text-white">Current Humidity:</span> {terrarium.humidity}%
+                </div>
+                <div className="mb-3">
+                  <span className="text-white">Last Updated:</span> {
+                    terrarium.updated_at
+                      ? new Date(terrarium.updated_at).toLocaleString()
+                      : new Date().toLocaleString()
+                  }
+                </div>
+                {latestReading && (
+                  <div className="mt-4">
+                    <h5 className="text-white">Latest Reading from Sensor</h5>
+                    <div><span className="text-white">Temperature:</span> {latestReading.temperature}°C</div>
+                    <div><span className="text-white">Humidity:</span> {latestReading.humidity}%</div>
+                    <div><span className="text-white">Time:</span> {new Date(latestReading.created_at).toLocaleString()}</div>
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
 
-      <Form.Group className="mb-3" controlId="modeSelect">
-        <Form.Label>Mode</Form.Label>
-        <Form.Select 
-          value={mode} 
-          onChange={e => handleModeChange(e.target.value)} 
-          className="bg-dark text-white border-light"
+        <Modal
+          show={showDeleteModal}
+          onHide={() => setShowDeleteModal(false)}
+          centered
+          dialogClassName="modal-dark"
         >
-          <option value="manual">Manual</option>
-          <option value="automatic">Automatic</option>
-        </Form.Select>
-      </Form.Group>
-
-      {mode === 'manual' ? (
-        <>
-          <Form.Check 
-            type="switch"
-            label="LEDs"
-            checked={formState.leds}
-            onChange={e => handleManualToggle('leds', e.target.checked)}
-            className="mb-2"
-          />
-          <Form.Check 
-            type="switch"
-            label="Heating"
-            checked={formState.heating}
-            onChange={e => handleManualToggle('heating', e.target.checked)}
-            className="mb-2"
-          />
-          <Form.Check 
-            type="switch"
-            label="Sprinkler"
-            checked={formState.sprinkler}
-            onChange={e => handleManualToggle('sprinkler', e.target.checked)}
-            className="mb-4"
-          />
-          {/* No Save button in manual mode */}
-        </>
-      ) : (
-        <>
-          <Form.Group className="mb-3">
-            <Form.Label>Day Temperature (°C)</Form.Label>
-            <Form.Control
-              type="number"
-              value={formState.dayTemp}
-              onChange={e => handleAutomaticChange('dayTemp', e.target.value)}
-              className="bg-dark text-white border-light"
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Night Temperature (°C)</Form.Label>
-            <Form.Control
-              type="number"
-              value={formState.nightTemp}
-              onChange={e => handleAutomaticChange('nightTemp', e.target.value)}
-              className="bg-dark text-white border-light"
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Day Humidity (%)</Form.Label>
-            <Form.Control
-              type="number"
-              value={formState.dayHumidity}
-              onChange={e => handleAutomaticChange('dayHumidity', e.target.value)}
-              className="bg-dark text-white border-light"
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Night Humidity (%)</Form.Label>
-            <Form.Control
-              type="number"
-              value={formState.nightHumidity}
-              onChange={e => handleAutomaticChange('nightHumidity', e.target.value)}
-              className="bg-dark text-white border-light"
-            />
-          </Form.Group>
-
-          <Button 
-            variant="primary" 
-            onClick={handleSaveAutomatic} 
-            disabled={isSaving}
-          >
-            {isSaving ? 'Saving...' : 'Save'}
-          </Button>
-        </>
-      )}
-
-      <hr className="my-4" />
-
-      <h4>Current State</h4>
-      <p><strong>Temperature:</strong> {terrarium.temperature}°C</p>
-      <p><strong>Humidity:</strong> {terrarium.humidity}%</p>
-
-      {latestReading && (
-        <>
-          <h5>Latest Sensor Reading</h5>
-          <p><strong>Temperature:</strong> {latestReading.temperature}°C</p>
-          <p><strong>Humidity:</strong> {latestReading.humidity}%</p>
-          <p><strong>Time:</strong> {new Date(latestReading.created_at).toLocaleString()}</p>
-        </>
-      )}
-    </Container>
+          <Modal.Header closeButton className="bg-dark text-white border-light">
+            <Modal.Title>Delete Terrarium</Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="bg-dark text-white">
+            <p>Are you sure you want to delete the terrarium "{terrarium.name}"?</p>
+            <p className="text-danger">This action cannot be undone.</p>
+          </Modal.Body>
+          <Modal.Footer className="bg-dark border-light">
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDelete}>
+              Delete
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </Container>
+    </>
   );
 };
 
