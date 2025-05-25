@@ -1,5 +1,5 @@
 import { Container, Row, Col, Button, Spinner, Alert, Card } from 'react-bootstrap';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../authContext';
 import axios from 'axios';
@@ -30,14 +30,12 @@ const TerrariumDetailPage = () => {
     const fetchAll = async () => {
       setIsLoading(true);
       try {
-        // get terrarium details (includes manual_mode, day/night settings, device flags…)
         const { data: t } = await axios.get(
           `${BASE_URL}/terrariums/${id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setTerrarium(t);
 
-        // get latest readings
         const { data: r } = await axios.get(
           `${BASE_URL}/readings/${id}`,
           { headers: { Authorization: `Bearer ${token}` } }
@@ -144,8 +142,8 @@ const TerrariumDetailPage = () => {
                     {readings.slice(0, 10).map(r => (
                       <tr key={r.id}>
                         <td>{new Date(r.created_at).toLocaleString()}</td>
-                        <td>{r.temperature.toFixed(1)}</td>
-                        <td>{r.humidity.toFixed(1)}</td>
+                        <td>{Number(r.temperature).toFixed(1)}</td>
+                        <td>{Number(r.humidity).toFixed(1)}</td>
                         <td>{r.heater_on ? 'On' : 'Off'}</td>
                         <td>{r.sprinkler_on ? 'On' : 'Off'}</td>
                         <td>{r.leds_on ? 'On' : 'Off'}</td>
