@@ -30,11 +30,11 @@ const TerrariumDetailPage = () => {
       setError('');
 
       try {
-        const terrariumResponse = await axios.get(`http://localhost:5000/api/terrariums/${id}`, {
+        const terrariumResponse = await axios.get(`http://13.60.201.150:5000/api/terrariums/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const readingsResponse = await axios.get(`http://localhost:5000/api/readings/${id}`, {
+        const readingsResponse = await axios.get(`http://13.60.201.150:5000/api/readings/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -82,7 +82,7 @@ const TerrariumDetailPage = () => {
       };
 
       const response = await axios.put(
-        `http://localhost:5000/api/terrariums/${id}`,
+        `http://13.60.201.150:5000/api/terrariums/${id}`,
         updatedData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -96,7 +96,7 @@ const TerrariumDetailPage = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/terrariums/${id}`, {
+      await axios.delete(`http://13.60.201.150:5000/api/terrariums/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       navigate('/dashboard');

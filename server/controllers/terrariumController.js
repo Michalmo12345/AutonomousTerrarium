@@ -44,11 +44,11 @@ const updateTerrarium = async (req, res) => {
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Terrarium not found or unauthorized' });
     }
-    await pool.query(
-      'INSERT INTO readings (terrarium_id, temperature, humidity) VALUES ($1, $2, $3)',
-      [id, temperature, humidity]
-    );
-    res.json(result.rows[0]);
+    //await pool.query(
+      //'INSERT INTO readings (terrarium_id, temperature, humidity) VALUES ($1, $2, $3)',
+     // [id, temperature, humidity]
+    //);
+    //res.json(result.rows[0]);
   } catch (err) {
     console.error('Error in updateTerrarium:', err);
     res.status(500).json({ error: 'Something went wrong' });

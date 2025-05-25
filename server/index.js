@@ -9,7 +9,7 @@ const readingRoutes = require('./routes/readings')
 
 const app = express()
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: ['http://13.60.201.150', 'http://13.60.201.150:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   }));
@@ -20,5 +20,4 @@ app.use('/api/terrariums', terrariumRoutes)
 app.use('/api/terrariums', animalRoutes)
 app.use('/api/readings', readingRoutes)
 
-const PORT = process.env.PORT || 5000
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+app.listen(5000, () => console.log(`Server running on port 5000`))
