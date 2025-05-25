@@ -20,15 +20,13 @@ export default function TerrariumDetailPage() {
 
   const [terrarium, setTerrarium] = useState(null);
   const [readings, setReadings] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Fetch details and readings
   const fetchData = async () => {
     try {
       const [terrRes, readRes] = await Promise.all([
         axios.get(`${BASE_URL}/terrariums/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${BASE_URL}/readings/${id}`,  { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${BASE_URL}/readings/${id}`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setTerrarium(terrRes.data);
       setReadings(readRes.data);
@@ -36,30 +34,14 @@ export default function TerrariumDetailPage() {
       const status = err.response?.status;
       if ([401, 403].includes(status)) return navigate('/login');
       setError(err.response?.data?.error || 'Failed to load data');
-    } finally {
-      setLoading(false);
     }
   };
-
+  
   useEffect(() => {
-    if (!token) return navigate('/login');
     fetchData();
     const interval = setInterval(fetchData, REFRESH_INTERVAL);
     return () => clearInterval(interval);
-  }, [id, token, navigate]);
-
-  const handleDaySwitch = async (value) => {
-    try {
-      const { data } = await axios.put(
-        `${BASE_URL}/terrariums/${id}/day`,
-        { day: value },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setTerrarium(prev => ({ ...prev, day: data.day }));
-    } catch (err) {
-      setError(err.response?.data?.error || 'Day/Night toggle failed');
-    }
-  };
+  }, [fetchData]);
 
   const handleModeSwitch = async (value) => {
     try {
