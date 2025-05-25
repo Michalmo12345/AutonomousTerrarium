@@ -6,11 +6,12 @@ import axios from 'axios';
 
 import ManualControlPanel from '../components/ManualControlPanel';
 import AutomaticSettingsPanel from '../components/AutomaticSettingsPanel';
-import ReadingControlPanel from '../components/ReadingControlPanel';
+import ReadingStatusPanel from '../components/ReadingStatusPanel';
 import ReadingChart from '../components/ReadingChart';
 import NavBar from '../components/NavBar';
 
 const BASE_URL = 'http://13.60.201.150:5000/api';
+const REFRESH_INTERVAL = 5000;
 
 export default function TerrariumDetailPage() {
   const { id } = useParams();
@@ -22,26 +23,29 @@ export default function TerrariumDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Fetch details and readings
+  const fetchData = async () => {
+    try {
+      const [terrRes, readRes] = await Promise.all([
+        axios.get(`${BASE_URL}/terrariums/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${BASE_URL}/readings/${id}`,  { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      setTerrarium(terrRes.data);
+      setReadings(readRes.data);
+    } catch (err) {
+      const status = err.response?.status;
+      if ([401, 403].includes(status)) return navigate('/login');
+      setError(err.response?.data?.error || 'Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!token) return navigate('/login');
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [terrRes, readRes] = await Promise.all([
-          axios.get(`${BASE_URL}/terrariums/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${BASE_URL}/readings/${id}`,  { headers: { Authorization: `Bearer ${token}` } })
-        ]);
-        setTerrarium(terrRes.data);
-        setReadings(readRes.data);
-      } catch (err) {
-        const status = err.response?.status;
-        if ([401, 403].includes(status)) return navigate('/login');
-        setError(err.response?.data?.error || 'Failed to load data');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
+    const interval = setInterval(fetchData, REFRESH_INTERVAL);
+    return () => clearInterval(interval);
   }, [id, token, navigate]);
 
   const handleDaySwitch = async (value) => {
@@ -70,12 +74,10 @@ export default function TerrariumDetailPage() {
     }
   };
 
-  if (loading) {
-    return <><NavBar /><Container className="py-5 text-center"><Spinner animation="border"/></Container></>;
-  }
-  if (error) {
-    return <><NavBar /><Container className="py-5"><Alert variant="danger">{error}</Alert><Link to="/dashboard" className="btn btn-outline-light">Back</Link></Container></>;
-  }
+  if (loading) return <><NavBar /><Container className="py-5 text-center"><Spinner animation="border"/></Container></>;
+  if (error)   return <><NavBar /><Container className="py-5"><Alert variant="danger">{error}</Alert><Link to="/dashboard" className="btn btn-outline-light">Back</Link></Container></>;
+
+  const latest = readings[0] || null;
 
   return (
     <>
@@ -113,9 +115,9 @@ export default function TerrariumDetailPage() {
             </Card>
           </Col>
 
-          {/* Reading Controls Panel */}
+          {/* Status Panel */}
           <Col md={6} className="mb-4">
-            <ReadingControlPanel terrarium={terrarium} token={token} setTerrarium={setTerrarium} />
+            <ReadingStatusPanel latest={latest} />
           </Col>
         </Row>
 
