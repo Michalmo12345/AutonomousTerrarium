@@ -1,3 +1,4 @@
+// File: src/pages/TerrariumDetailPage.js
 import { Container, Row, Col, Card, Spinner, Alert, Table, Form, Button } from 'react-bootstrap';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -26,8 +27,8 @@ export default function TerrariumDetailPage() {
       setLoading(true);
       try {
         const [terrRes, readRes] = await Promise.all([
-          axios.get(`${BASE_URL}/terrariums/${id}`, { headers: { Authorization: `Bearer ${token}` }}),
-          axios.get(`${BASE_URL}/readings/${id}`,  { headers: { Authorization: `Bearer ${token}` }})
+          axios.get(`${BASE_URL}/terrariums/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${BASE_URL}/readings/${id}`,  { headers: { Authorization: `Bearer ${token}` } })
         ]);
         setTerrarium(terrRes.data);
         setReadings(readRes.data);
@@ -41,7 +42,7 @@ export default function TerrariumDetailPage() {
     })();
   }, [id, token, navigate]);
 
-  const handleUpdate = async updates => {
+  const handleGenericUpdate = async updates => {
     try {
       const { data } = await axios.put(
         `${BASE_URL}/terrariums/${id}`,
@@ -70,6 +71,7 @@ export default function TerrariumDetailPage() {
   if (loading) {
     return <><NavBar /><Container className="py-5 text-center"><Spinner animation="border"/></Container></>;
   }
+
   if (error) {
     return <><NavBar /><Container className="py-5"><Alert variant="danger">{error}</Alert><Link to="/dashboard" className="btn btn-outline-light">Back</Link></Container></>;
   }
@@ -96,15 +98,15 @@ export default function TerrariumDetailPage() {
                 <Button
                   size="sm"
                   variant="outline-light"
-                  onClick={() => handleUpdate({ manual_mode: !terrarium.manual_mode })}
+                  onClick={() => handleGenericUpdate({ manual_mode: !terrarium.manual_mode })}
                 >
                   {terrarium.manual_mode ? '→ Automatic' : '→ Manual'}
                 </Button>
               </Card.Header>
               <Card.Body>
                 {terrarium.manual_mode
-                  ? <ManualControlPanel terrarium={terrarium} onUpdate={handleUpdate}/>
-                  : <AutomaticSettingsPanel terrarium={terrarium} onUpdate={handleUpdate}/>
+                  ? <ManualControlPanel terrarium={terrarium} setTerrarium={setTerrarium} token={token} />
+                  : <AutomaticSettingsPanel terrarium={terrarium} onUpdate={handleGenericUpdate} />
                 }
               </Card.Body>
             </Card>
@@ -118,14 +120,20 @@ export default function TerrariumDetailPage() {
                 {readings.length === 0
                   ? <div className="p-3 text-center">No readings.</div>
                   : (
-                    <Table variant="dark" hover responsive className="mb-0" style={{ maxHeight: 400, overflowY: 'auto', display: 'block' }}>
+                    <Table
+                      variant="dark"
+                      hover
+                      responsive
+                      className="mb-0"
+                      style={{ maxHeight: 400, overflowY: 'auto', display: 'block' }}
+                    >
                       <thead>
                         <tr>
                           <th>Time</th><th>Temp</th><th>Hum</th><th>Heater</th><th>Sprinkler</th><th>LEDs</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {readings.slice(0,10).map(r => (
+                        {readings.slice(0, 10).map(r => (
                           <tr key={r.id}>
                             <td>{new Date(r.created_at).toLocaleTimeString()}</td>
                             <td>{Number(r.temperature).toFixed(1)}</td>
