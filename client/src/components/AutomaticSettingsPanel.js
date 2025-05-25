@@ -93,9 +93,6 @@ export default function AutomaticSettingsPanel({ terrarium, id, token, setTerrar
         onChange={() => setForm(f => ({ ...f, leds_enabled: !f.leds_enabled }))}
         className="mb-3"
       />
-      <Button variant="primary" className="w-100 mb-3" onClick={toggleLEDs}>
-        {form.leds_enabled ? 'Turn LEDs Off' : 'Turn LEDs On'}
-      </Button>
 
       <Form.Group controlId="autoColor" className="mb-3">
         <Form.Label>Color (integer)</Form.Label>
