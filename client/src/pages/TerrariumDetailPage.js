@@ -3,14 +3,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Alert, Modal, Form } from 'react-bootstrap';
 import NavBar from '../components/NavBar';
 import { useAuth } from '../authContext';
-import {
-  getTerrarium,
-  getLatestReading,
-  updateTerrarium,
-  deleteTerrarium,
-  updateManualDevices,
-  updateAutomaticSettings
-} from '../api';
+import CurrentState from '../components/CurrentState';
+import ModeForm from '../components/ModeForm';
 
 const TerrariumDetailPage = () => {
   const { id } = useParams();
@@ -24,8 +18,6 @@ const TerrariumDetailPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [mode, setMode] = useState('manual');
   const [formState, setFormState] = useState({
-    temperature: '',
-    humidity: '',
     leds: false,
     heating: false,
     sprinkler: false,
@@ -36,62 +28,46 @@ const TerrariumDetailPage = () => {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const terrariumData = await getTerrarium(id, token);
-        const reading = await getLatestReading(id, token);
-        setTerrarium(terrariumData);
-        setFormState({
-          temperature: terrariumData.temperature,
-          humidity: terrariumData.humidity,
-          leds: terrariumData.leds,
-          heating: terrariumData.heating,
-          sprinkler: terrariumData.sprinkler,
-          dayTemp: terrariumData.day_temp,
-          nightTemp: terrariumData.night_temp,
-          dayHumidity: terrariumData.day_humidity,
-          nightHumidity: terrariumData.night_humidity
-        });
-        if (reading) setLatestReading(reading);
-      } catch (err) {
-        setError('Failed to fetch terrarium details');
-      }
-      setIsLoading(false);
+    const mockTerrarium = {
+      name: 'My Terrarium',
+      temperature: 23.5,
+      humidity: 60,
+      leds: true,
+      heating: false,
+      sprinkler: true,
+      day_temp: 25,
+      night_temp: 20,
+      day_humidity: 60,
+      night_humidity: 70
     };
-    fetchData();
-  }, [id, token]);
 
-  const handleDelete = async () => {
-    try {
-      await deleteTerrarium(id, token);
-      navigate('/dashboard');
-    } catch (err) {
-      setError('Failed to delete terrarium');
-    }
+    const mockReading = {
+      temperature: 24,
+      humidity: 65,
+      created_at: new Date().toISOString()
+    };
+
+    setTerrarium(mockTerrarium);
+    setLatestReading(mockReading);
+    setFormState({
+      leds: mockTerrarium.leds,
+      heating: mockTerrarium.heating,
+      sprinkler: mockTerrarium.sprinkler,
+      dayTemp: mockTerrarium.day_temp,
+      nightTemp: mockTerrarium.night_temp,
+      dayHumidity: mockTerrarium.day_humidity,
+      nightHumidity: mockTerrarium.night_humidity
+    });
+    setIsLoading(false);
+  }, [id]);
+
+  const handleDelete = () => {
+    navigate('/dashboard');
   };
 
-  const handleSubmit = async () => {
-    try {
-      if (mode === 'manual') {
-        await updateManualDevices(id, {
-          leds: formState.leds,
-          heating: formState.heating,
-          sprinkler: formState.sprinkler
-        }, token);
-      } else {
-        await updateAutomaticSettings(id, {
-          day_temp: formState.dayTemp,
-          night_temp: formState.nightTemp,
-          day_humidity: formState.dayHumidity,
-          night_humidity: formState.nightHumidity
-        }, token);
-      }
-      const updated = await getTerrarium(id, token);
-      setTerrarium(updated);
-    } catch (err) {
-      setError('Update failed');
-    }
+  const handleSubmit = () => {
+    const updatedTerrarium = { ...terrarium, ...formState };
+    setTerrarium(updatedTerrarium);
   };
 
   const handleChange = (field, value) => {
@@ -126,102 +102,11 @@ const TerrariumDetailPage = () => {
 
         <Row>
           <Col md={6} className="mb-4">
-            <Card className="text-white">
-              <Card.Body>
-                <Form>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Mode</Form.Label>
-                    <Form.Select value={mode} onChange={(e) => setMode(e.target.value)} className="bg-dark text-white border-light">
-                      <option value="manual">Manual</option>
-                      <option value="automatic">Automatic</option>
-                    </Form.Select>
-                  </Form.Group>
-
-                  {mode === 'manual' ? (
-                    <>
-                      <Form.Check
-                        type="switch"
-                        label="LEDs"
-                        checked={formState.leds}
-                        onChange={(e) => handleChange('leds', e.target.checked)}
-                        className="text-white"
-                      />
-                      <Form.Check
-                        type="switch"
-                        label="Heating"
-                        checked={formState.heating}
-                        onChange={(e) => handleChange('heating', e.target.checked)}
-                        className="text-white"
-                      />
-                      <Form.Check
-                        type="switch"
-                        label="Sprinkler"
-                        checked={formState.sprinkler}
-                        onChange={(e) => handleChange('sprinkler', e.target.checked)}
-                        className="text-white"
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Day Temperature (°C)</Form.Label>
-                        <Form.Control
-                          type="number"
-                          value={formState.dayTemp}
-                          onChange={(e) => handleChange('dayTemp', e.target.value)}
-                          className="bg-dark text-white border-light"
-                        />
-                      </Form.Group>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Night Temperature (°C)</Form.Label>
-                        <Form.Control
-                          type="number"
-                          value={formState.nightTemp}
-                          onChange={(e) => handleChange('nightTemp', e.target.value)}
-                          className="bg-dark text-white border-light"
-                        />
-                      </Form.Group>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Day Humidity (%)</Form.Label>
-                        <Form.Control
-                          type="number"
-                          value={formState.dayHumidity}
-                          onChange={(e) => handleChange('dayHumidity', e.target.value)}
-                          className="bg-dark text-white border-light"
-                        />
-                      </Form.Group>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Night Humidity (%)</Form.Label>
-                        <Form.Control
-                          type="number"
-                          value={formState.nightHumidity}
-                          onChange={(e) => handleChange('nightHumidity', e.target.value)}
-                          className="bg-dark text-white border-light"
-                        />
-                      </Form.Group>
-                    </>
-                  )}
-                </Form>
-              </Card.Body>
-            </Card>
+            <ModeForm mode={mode} setMode={setMode} formState={formState} handleChange={handleChange} />
           </Col>
 
           <Col md={6} className="mb-4">
-            <Card className="text-white">
-              <Card.Body>
-                <h4 className="text-white">Current State</h4>
-                <p><strong>Temperature:</strong> {terrarium.temperature}°C</p>
-                <p><strong>Humidity:</strong> {terrarium.humidity}%</p>
-                {latestReading && (
-                  <div className="mt-3">
-                    <h5 className="text-white">Latest Sensor Reading</h5>
-                    <p><strong>Temperature:</strong> {latestReading.temperature}°C</p>
-                    <p><strong>Humidity:</strong> {latestReading.humidity}%</p>
-                    <p><strong>Time:</strong> {new Date(latestReading.created_at).toLocaleString()}</p>
-                  </div>
-                )}
-              </Card.Body>
-            </Card>
+            <CurrentState terrarium={terrarium} latestReading={latestReading} />
           </Col>
         </Row>
 
