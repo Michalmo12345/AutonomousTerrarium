@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { getTerrariums, createTerrarium, getSettings, updateTerrarium, deleteTerrarium, getTerrariumById, getTemperatureHistory } = require('../controllers/terrariumController');
+const { 
+    getTerrariums, createTerrarium, getSettings, updateTerrarium, 
+    deleteTerrarium, getTerrariumById, getTemperatureHistory,
+    setDayMode, setLedsEnabled, setColor, setManualMode,
+    setSprinklerEnabled, setHeaterEnabled 
+} = require('../controllers/terrariumController');
 const authenticateToken = require('../middleware/authMiddleware');
 
 router.use(authenticateToken);
@@ -14,7 +19,6 @@ router.delete('/:id', deleteTerrarium);
 router.get('/:id/settings', getSettings);
 
 router.put('/:id/day', setDayMode)
-router.put('/:id/temperature', setTargetTemperature)
 router.put('/:id/leds', setLedsEnabled)
 router.put('/:id/color', setColor)
 
