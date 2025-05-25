@@ -1,4 +1,3 @@
-// File: src/pages/TerrariumDetailPage.js
 import { Container, Row, Col, Card, Spinner, Alert, Table, Form, Button } from 'react-bootstrap';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -42,6 +41,32 @@ export default function TerrariumDetailPage() {
     })();
   }, [id, token, navigate]);
 
+  const handleDaySwitch = async (value) => {
+    try {
+      const { data } = await axios.put(
+        `${BASE_URL}/terrariums/${id}/day`,
+        { day: value },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTerrarium(prev => ({ ...prev, day: data.day }));
+    } catch (err) {
+      setError(err.response?.data?.error || 'Day/Night toggle failed');
+    }
+  };
+
+  const handleModeSwitch = async (value) => {
+    try {
+      const { data } = await axios.put(
+        `${BASE_URL}/terrariums/${id}/manual-mode`,
+        { manual_mode: value },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTerrarium(prev => ({ ...prev, manual_mode: data.manual_mode }));
+    } catch (err) {
+      setError(err.response?.data?.error || 'Mode switch failed');
+    }
+  };
+
   const handleGenericUpdate = async updates => {
     try {
       const { data } = await axios.put(
@@ -55,23 +80,9 @@ export default function TerrariumDetailPage() {
     }
   };
 
-  const handleDaySwitch = async value => {
-    try {
-      const { data } = await axios.put(
-        `${BASE_URL}/terrariums/${id}/day`,
-        { day: value },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setTerrarium(prev => ({ ...prev, day: data.day }));
-    } catch (err) {
-      setError(err.response?.data?.error || 'Day/Night toggle failed');
-    }
-  };
-
   if (loading) {
     return <><NavBar /><Container className="py-5 text-center"><Spinner animation="border"/></Container></>;
   }
-
   if (error) {
     return <><NavBar /><Container className="py-5"><Alert variant="danger">{error}</Alert><Link to="/dashboard" className="btn btn-outline-light">Back</Link></Container></>;
   }
@@ -82,9 +93,7 @@ export default function TerrariumDetailPage() {
       <Container className="py-5">
         <Link to="/dashboard" className="btn btn-outline-light mb-4">← Dashboard</Link>
         <h1 className="text-white mb-4">{terrarium.name}</h1>
-
         <Row>
-          {/* Controls Panel */}
           <Col md={6} className="mb-4">
             <Card bg="dark" text="white" className="h-100 shadow-sm">
               <Card.Header className="d-flex justify-content-between align-items-center">
@@ -98,7 +107,7 @@ export default function TerrariumDetailPage() {
                 <Button
                   size="sm"
                   variant="outline-light"
-                  onClick={() => handleGenericUpdate({ manual_mode: !terrarium.manual_mode })}
+                  onClick={() => handleModeSwitch(!terrarium.manual_mode)}
                 >
                   {terrarium.manual_mode ? '→ Automatic' : '→ Manual'}
                 </Button>
@@ -111,8 +120,6 @@ export default function TerrariumDetailPage() {
               </Card.Body>
             </Card>
           </Col>
-
-          {/* Readings Panel */}
           <Col md={6} className="mb-4">
             <Card bg="dark" text="white" className="h-100 shadow-sm">
               <Card.Header>Recent Readings</Card.Header>
