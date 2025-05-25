@@ -11,7 +11,7 @@ import ReadingChart from '../components/ReadingChart';
 import NavBar from '../components/NavBar';
 
 const BASE_URL = 'http://13.60.201.150:5000/api';
-const REFRESH_INTERVAL = 5000;
+const REFRESH_INTERVAL = 5000; // milliseconds
 
 export default function TerrariumDetailPage() {
   const { id } = useParams();
@@ -20,13 +20,15 @@ export default function TerrariumDetailPage() {
 
   const [terrarium, setTerrarium] = useState(null);
   const [readings, setReadings] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Fetch details and readings
   const fetchData = async () => {
     try {
       const [terrRes, readRes] = await Promise.all([
         axios.get(`${BASE_URL}/terrariums/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${BASE_URL}/readings/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${BASE_URL}/readings/${id}`,  { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setTerrarium(terrRes.data);
       setReadings(readRes.data);
@@ -34,14 +36,30 @@ export default function TerrariumDetailPage() {
       const status = err.response?.status;
       if ([401, 403].includes(status)) return navigate('/login');
       setError(err.response?.data?.error || 'Failed to load data');
+    } finally {
+      setLoading(false);
     }
   };
-  
+
   useEffect(() => {
+    if (!token) return navigate('/login');
     fetchData();
     const interval = setInterval(fetchData, REFRESH_INTERVAL);
     return () => clearInterval(interval);
-  }, [fetchData]);
+  }, [id, token, navigate]);
+
+  const handleDaySwitch = async (value) => {
+    try {
+      const { data } = await axios.put(
+        `${BASE_URL}/terrariums/${id}/day`,
+        { day: value },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTerrarium(prev => ({ ...prev, day: data.day }));
+    } catch (err) {
+      setError(err.response?.data?.error || 'Day/Night toggle failed');
+    }
+  };
 
   const handleModeSwitch = async (value) => {
     try {
