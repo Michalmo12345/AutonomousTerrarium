@@ -1,4 +1,4 @@
-import { Container, Row, Col, Card, Spinner, Alert, Table, Form, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Spinner, Alert, Form, Button } from 'react-bootstrap';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../authContext';
