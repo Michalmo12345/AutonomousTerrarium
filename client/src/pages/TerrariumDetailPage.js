@@ -6,6 +6,8 @@ import axios from 'axios';
 
 import ManualControlPanel from '../components/ManualControlPanel';
 import AutomaticSettingsPanel from '../components/AutomaticSettingsPanel';
+import ReadingControlPanel from '../components/ReadingControlPanel';
+import ReadingChart from '../components/ReadingChart';
 import NavBar from '../components/NavBar';
 
 const BASE_URL = 'http://13.60.201.150:5000/api';
@@ -22,7 +24,7 @@ export default function TerrariumDetailPage() {
 
   useEffect(() => {
     if (!token) return navigate('/login');
-    (async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
         const [terrRes, readRes] = await Promise.all([
@@ -38,7 +40,8 @@ export default function TerrariumDetailPage() {
       } finally {
         setLoading(false);
       }
-    })();
+    };
+    fetchData();
   }, [id, token, navigate]);
 
   const handleDaySwitch = async (value) => {
@@ -80,7 +83,9 @@ export default function TerrariumDetailPage() {
       <Container className="py-5">
         <Link to="/dashboard" className="btn btn-outline-light mb-4">← Dashboard</Link>
         <h1 className="text-white mb-4">{terrarium.name}</h1>
+
         <Row>
+          {/* Settings Panel */}
           <Col md={6} className="mb-4">
             <Card bg="dark" text="white" className="h-100 shadow-sm">
               <Card.Header className="d-flex justify-content-between align-items-center">
@@ -102,46 +107,22 @@ export default function TerrariumDetailPage() {
               <Card.Body>
                 {terrarium.manual_mode
                   ? <ManualControlPanel terrarium={terrarium} setTerrarium={setTerrarium} token={token} />
-                  : <AutomaticSettingsPanel terrarium={terrarium} token={token} id={id} setTerrarium={setTerrarium} />
+                  : <AutomaticSettingsPanel terrarium={terrarium} id={id} token={token} setTerrarium={setTerrarium} />
                 }
               </Card.Body>
             </Card>
           </Col>
+
+          {/* Reading Controls Panel */}
           <Col md={6} className="mb-4">
-            <Card bg="dark" text="white" className="h-100 shadow-sm">
-              <Card.Header>Recent Readings</Card.Header>
-              <Card.Body className="p-0">
-                {readings.length === 0
-                  ? <div className="p-3 text-center">No readings.</div>
-                  : (
-                    <Table
-                      variant="dark"
-                      hover
-                      responsive
-                      className="mb-0"
-                      style={{ maxHeight: 400, overflowY: 'auto', display: 'block' }}
-                    >
-                      <thead>
-                        <tr>
-                          <th>Time</th><th>Temp</th><th>Hum</th><th>Heater</th><th>Sprinkler</th><th>LEDs</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {readings.slice(0, 10).map(r => (
-                          <tr key={r.id}>
-                            <td>{new Date(r.created_at).toLocaleTimeString()}</td>
-                            <td>{Number(r.temperature).toFixed(1)}</td>
-                            <td>{Number(r.humidity).toFixed(1)}</td>
-                            <td>{r.heater_on ? '✔' : '✖'}</td>
-                            <td>{r.sprinkler_on ? '✔' : '✖'}</td>
-                            <td>{r.leds_on ? '✔' : '✖'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </Table>
-                  )}
-              </Card.Body>
-            </Card>
+            <ReadingControlPanel terrarium={terrarium} token={token} setTerrarium={setTerrarium} />
+          </Col>
+        </Row>
+
+        {/* Chart Panel */}
+        <Row className="mt-4">
+          <Col>
+            <ReadingChart readings={readings} />
           </Col>
         </Row>
       </Container>

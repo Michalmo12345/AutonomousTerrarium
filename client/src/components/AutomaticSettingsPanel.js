@@ -38,15 +38,6 @@ export default function AutomaticSettingsPanel({ terrarium, id, token, setTerrar
     setTerrarium(prev => ({ ...prev, ...data }));
   };
 
-  const toggleLEDs = async () => {
-    const { data } = await axios.put(
-      `${BASE_URL}/terrariums/${id}/leds-enabled`,
-      { leds_enabled: form.leds_enabled },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setTerrarium(prev => ({ ...prev, leds_enabled: data.leds_enabled }));
-  };
-
   const saveColor = async () => {
     const { data } = await axios.put(
       `${BASE_URL}/terrariums/${id}/color`,
