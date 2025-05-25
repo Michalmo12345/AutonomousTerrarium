@@ -1,9 +1,14 @@
-import { Container, Row, Col, Card, Form, Button, Alert, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Button, Spinner, Alert, Card } from 'react-bootstrap';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../authContext';
 import axios from 'axios';
+
+import ManualControlPanel from '../components/ManualControlPanel';
+import AutomaticSettingsPanel from '../components/AutomaticSettingsPanel';
 import NavBar from '../components/NavBar';
+
+const BASE_URL = 'http://13.60.201.150:5000/api';
 
 const TerrariumDetailPage = () => {
   const { id } = useParams();
@@ -11,98 +16,59 @@ const TerrariumDetailPage = () => {
   const { token } = useAuth();
 
   const [terrarium, setTerrarium] = useState(null);
-  const [temperature, setTemperature] = useState('');
-  const [humidity, setHumidity] = useState('');
-  const [latestReading, setLatestReading] = useState(null);
-  const [error, setError] = useState('');
+  const [readings, setReadings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [error, setError] = useState('');
 
+  // fetch terrarium settings + readings
   useEffect(() => {
-    const fetchData = async () => {
-      if (!token) {
-        setError('Please log in to view this page.');
-        navigate('/login');
-        return;
-      }
+    if (!token) {
+      navigate('/login');
+      return;
+    }
 
+    const fetchAll = async () => {
       setIsLoading(true);
-      setError('');
-
       try {
-        const terrariumResponse = await axios.get(`http://13.60.201.150:5000/api/terrariums/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // get terrarium details (includes manual_mode, day/night settings, device flags…)
+        const { data: t } = await axios.get(
+          `${BASE_URL}/terrariums/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setTerrarium(t);
 
-        const readingsResponse = await axios.get(`http://13.60.201.150:5000/api/readings/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const terrariumData = terrariumResponse.data;
-        setTerrarium(terrariumData);
-        setTemperature(terrariumData.temperature);
-        setHumidity(terrariumData.humidity);
-
-        if (readingsResponse.data.length > 0) {
-          setLatestReading(readingsResponse.data[0]);
-        }
+        // get latest readings
+        const { data: r } = await axios.get(
+          `${BASE_URL}/readings/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setReadings(r);
       } catch (err) {
-        handleError(err);
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          setError('Not authorized — please log in again.');
+          navigate('/login');
+        } else {
+          setError(err.response?.data?.error || 'Failed to load data');
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchData();
+    fetchAll();
   }, [id, token, navigate]);
 
-  const handleError = (err) => {
-    if (err.response) {
-      if (err.response.status === 401 || err.response.status === 403) {
-        setError('You are not authorized to view this terrarium.');
-      } else {
-        setError(err.response.data?.error || 'Failed to load terrarium details');
-      }
-    } else {
-      setError('Unable to connect to the server.');
-    }
-  };
-
-  const handleUpdate = async () => {
-    if (!temperature || !humidity) {
-      setError('Temperature and humidity are required');
-      return;
-    }
-
+  // generic updater for any terrarium field
+  const handleUpdate = async (updates) => {
     try {
-      const updatedData = {
-        name: terrarium.name,
-        temperature: Number(temperature),
-        humidity: Number(humidity)
-      };
-
-      const response = await axios.put(
-        `http://13.60.201.150:5000/api/terrariums/${id}`,
-        updatedData,
+      const { data } = await axios.put(
+        `${BASE_URL}/terrariums/${id}`,
+        updates,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      setTerrarium(response.data);
-      setError('');
+      setTerrarium(prev => ({ ...prev, ...data }));
     } catch (err) {
-      handleError(err);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      await axios.delete(`http://13.60.201.150:5000/api/terrariums/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      navigate('/dashboard');
-    } catch (err) {
-      handleError(err);
-      setShowDeleteModal(false);
+      setError(err.response?.data?.error || 'Update failed');
     }
   };
 
@@ -110,8 +76,8 @@ const TerrariumDetailPage = () => {
     return (
       <>
         <NavBar />
-        <Container className="py-5">
-          <p className="text-white">Loading...</p>
+        <Container className="py-5 text-center">
+          <Spinner animation="border" />
         </Container>
       </>
     );
@@ -129,116 +95,68 @@ const TerrariumDetailPage = () => {
     );
   }
 
-  if (!terrarium) {
-    return (
-      <>
-        <NavBar />
-        <Container className="py-5">
-          <Alert variant="danger">Terrarium data could not be loaded.</Alert>
-          <Link to="/dashboard" className="btn btn-outline-light">Back to Dashboard</Link>
-        </Container>
-      </>
-    );
-  }
-
   return (
     <>
       <NavBar />
       <Container className="py-5">
-        <div className="mb-4">
-          <Link to="/dashboard" className="btn btn-outline-light mb-3">← Back to Dashboard</Link>
-          <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h1 className="text-white display-5 fw-bold mb-0">{terrarium.name}</h1>
-            <div className="d-flex gap-2">
-              <Button variant="primary" onClick={handleUpdate}>Update Settings</Button>
-              <Button variant="danger" onClick={() => setShowDeleteModal(true)}>Delete Terrarium</Button>
-            </div>
-          </div>
-          <div className="gradient-underline mb-4"></div>
-        </div>
+        <Link to="/dashboard" className="btn btn-outline-light mb-4">← Back to Dashboard</Link>
+        <h1 className="text-white mb-4">{terrarium.name}</h1>
 
         <Row>
+          {/* Left: Controls */}
           <Col lg={6} className="mb-4">
-            <Card className="text-white h-100">
-              <Card.Body>
-                <h3 className="text-white mb-4">Environment Settings</h3>
-                <Form>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Temperature (°C)</Form.Label>
-                    <Form.Control
-                      type="number"
-                      step="0.1"
-                      value={temperature}
-                      onChange={(e) => setTemperature(e.target.value)}
-                      className="bg-dark text-white border-light"
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-0">
-                    <Form.Label>Humidity (%)</Form.Label>
-                    <Form.Control
-                      type="number"
-                      step="0.1"
-                      value={humidity}
-                      onChange={(e) => setHumidity(e.target.value)}
-                      className="bg-dark text-white border-light"
-                    />
-                  </Form.Group>
-                </Form>
-              </Card.Body>
+            <Card className="p-4 bg-dark text-white h-100">
+              <div className="d-flex justify-content-between mb-3">
+                <h4>Mode: {terrarium.manual_mode ? 'Manual' : 'Automatic'}</h4>
+                <Button
+                  size="sm"
+                  onClick={() => handleUpdate({ manual_mode: !terrarium.manual_mode })}
+                >
+                  Switch to {terrarium.manual_mode ? 'Automatic' : 'Manual'}
+                </Button>
+              </div>
+              {terrarium.manual_mode
+                ? <ManualControlPanel terrarium={terrarium} onUpdate={handleUpdate} />
+                : <AutomaticSettingsPanel terrarium={terrarium} onUpdate={handleUpdate} />
+              }
             </Card>
           </Col>
+
+          {/* Right: Readings */}
           <Col lg={6} className="mb-4">
-            <Card className="text-white h-100">
-              <Card.Body>
-                <h3 className="text-white mb-4">Terrarium Overview</h3>
-                <div className="mb-3">
-                  <span className="text-white">Current Temperature:</span> {terrarium.temperature}°C
-                </div>
-                <div className="mb-3">
-                  <span className="text-white">Current Humidity:</span> {terrarium.humidity}%
-                </div>
-                <div className="mb-3">
-                  <span className="text-white">Last Updated:</span> {
-                    terrarium.updated_at
-                      ? new Date(terrarium.updated_at).toLocaleString()
-                      : new Date().toLocaleString()
-                  }
-                </div>
-                {latestReading && (
-                  <div className="mt-4">
-                    <h5 className="text-white">Latest Reading from Sensor</h5>
-                    <div><span className="text-white">Temperature:</span> {latestReading.temperature}°C</div>
-                    <div><span className="text-white">Humidity:</span> {latestReading.humidity}%</div>
-                    <div><span className="text-white">Time:</span> {new Date(latestReading.created_at).toLocaleString()}</div>
-                  </div>
-                )}
-              </Card.Body>
+            <Card className="p-4 bg-dark text-white h-100">
+              <h4 className="mb-3">Recent Sensor Readings</h4>
+              {readings.length === 0 ? (
+                <p>No readings available.</p>
+              ) : (
+                <table className="table table-sm table-dark">
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Temp (°C)</th>
+                      <th>Hum (%)</th>
+                      <th>Heater</th>
+                      <th>Sprinkler</th>
+                      <th>LEDs</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {readings.slice(0, 10).map(r => (
+                      <tr key={r.id}>
+                        <td>{new Date(r.created_at).toLocaleString()}</td>
+                        <td>{r.temperature.toFixed(1)}</td>
+                        <td>{r.humidity.toFixed(1)}</td>
+                        <td>{r.heater_on ? 'On' : 'Off'}</td>
+                        <td>{r.sprinkler_on ? 'On' : 'Off'}</td>
+                        <td>{r.leds_on ? 'On' : 'Off'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </Card>
           </Col>
         </Row>
-
-        <Modal
-          show={showDeleteModal}
-          onHide={() => setShowDeleteModal(false)}
-          centered
-          dialogClassName="modal-dark"
-        >
-          <Modal.Header closeButton className="bg-dark text-white border-light">
-            <Modal.Title>Delete Terrarium</Modal.Title>
-          </Modal.Header>
-          <Modal.Body className="bg-dark text-white">
-            <p>Are you sure you want to delete the terrarium "{terrarium.name}"?</p>
-            <p className="text-danger">This action cannot be undone.</p>
-          </Modal.Body>
-          <Modal.Footer className="bg-dark border-light">
-            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-              Cancel
-            </Button>
-            <Button variant="danger" onClick={handleDelete}>
-              Delete
-            </Button>
-          </Modal.Footer>
-        </Modal>
       </Container>
     </>
   );
