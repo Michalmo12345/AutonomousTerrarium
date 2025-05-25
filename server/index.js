@@ -4,7 +4,6 @@ require('dotenv').config()
 
 const authRoutes = require('./routes/auth')
 const terrariumRoutes = require('./routes/terrariums')
-const animalRoutes = require('./routes/animals')
 const readingRoutes = require('./routes/readings')
 
 const app = express()
