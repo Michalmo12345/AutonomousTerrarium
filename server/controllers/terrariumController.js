@@ -155,11 +155,10 @@ const setDayMode = async (req, res) => {
 
 const updateTerrarium = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id }          = req.params;
     const { temperature, humidity } = req.body;
-    const { id: userId } = req.user;
+    const { id: userId }  = req.user;
 
-    // Fetch current mode (day vs night)
     const { rows } = await pool.query(
       'SELECT day FROM terrariums WHERE id = $1 AND user_id = $2',
       [id, userId]
@@ -169,28 +168,26 @@ const updateTerrarium = async (req, res) => {
     }
     const { day } = rows[0];
 
-    // Validate inputs
     if (temperature == null || humidity == null) {
       return res.status(400).json({ error: 'Temperature and humidity are required' });
     }
     if (
       typeof temperature !== 'number' || temperature < 0 || temperature > 100 ||
-      typeof humidity !== 'number' || humidity < 0 || humidity > 100
+      typeof humidity    !== 'number' || humidity    < 0 || humidity    > 100
     ) {
       return res.status(400).json({ error: 'Temperature and humidity must be numbers between 0 and 100' });
     }
 
-    // Determine which columns to update
     const tempCol = day ? 'day_temperature' : 'night_temperature';
-    const humCol  = day ? 'day_humidity_target' : 'night_humidity_target';
 
-    // Perform update and return full updated row
     const result = await pool.query(
       `UPDATE terrariums
          SET ${tempCol} = $1,
-             ${humCol}  = $2
+             humidity    = $2
        WHERE id = $3 AND user_id = $4
-       RETURNING *, ${tempCol} AS temperature, ${humCol} AS humidity`,
+       RETURNING *,
+                 ${tempCol} AS temperature,
+                 humidity    AS humidity`,
       [temperature, humidity, id, userId]
     );
 

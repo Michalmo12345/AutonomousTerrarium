@@ -14,6 +14,7 @@ export default function TerrariumDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { token } = useAuth();
+
   const [terrarium, setTerrarium] = useState(null);
   const [readings, setReadings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,16 +23,18 @@ export default function TerrariumDetailPage() {
   useEffect(() => {
     if (!token) return navigate('/login');
     (async () => {
+      setLoading(true);
       try {
-        const [{ data: t }, { data: r }] = await Promise.all([
+        const [terrRes, readRes] = await Promise.all([
           axios.get(`${BASE_URL}/terrariums/${id}`, { headers: { Authorization: `Bearer ${token}` }}),
           axios.get(`${BASE_URL}/readings/${id}`,  { headers: { Authorization: `Bearer ${token}` }})
         ]);
-        setTerrarium(t);
-        setReadings(r);
+        setTerrarium(terrRes.data);
+        setReadings(readRes.data);
       } catch (err) {
-        if ([401,403].includes(err.response?.status)) return navigate('/login');
-        setError(err.response?.data?.error || 'Load error');
+        const status = err.response?.status;
+        if ([401, 403].includes(status)) return navigate('/login');
+        setError(err.response?.data?.error || 'Failed to load data');
       } finally {
         setLoading(false);
       }
@@ -39,15 +42,10 @@ export default function TerrariumDetailPage() {
   }, [id, token, navigate]);
 
   const handleUpdate = async updates => {
-    // always include name, plus temperature/humidity
     try {
-      const payload = {
-        name: terrarium.name,
-        ...updates
-      };
       const { data } = await axios.put(
         `${BASE_URL}/terrariums/${id}`,
-        { ...payload },
+        updates,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTerrarium(prev => ({ ...prev, ...data }));
@@ -56,12 +54,25 @@ export default function TerrariumDetailPage() {
     }
   };
 
-  if (loading) return (
-    <><NavBar /><Container className="py-5 text-center"><Spinner animation="border" /></Container></>
-  );
-  if (error)   return (
-    <><NavBar /><Container className="py-5"><Alert variant="danger">{error}</Alert><Link to="/dashboard" className="btn btn-outline-light">Back</Link></Container></>
-  );
+  const handleDaySwitch = async value => {
+    try {
+      const { data } = await axios.put(
+        `${BASE_URL}/terrariums/${id}/day`,
+        { day: value },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTerrarium(prev => ({ ...prev, day: data.day }));
+    } catch (err) {
+      setError(err.response?.data?.error || 'Day/Night toggle failed');
+    }
+  };
+
+  if (loading) {
+    return <><NavBar /><Container className="py-5 text-center"><Spinner animation="border"/></Container></>;
+  }
+  if (error) {
+    return <><NavBar /><Container className="py-5"><Alert variant="danger">{error}</Alert><Link to="/dashboard" className="btn btn-outline-light">Back</Link></Container></>;
+  }
 
   return (
     <>
@@ -71,22 +82,19 @@ export default function TerrariumDetailPage() {
         <h1 className="text-white mb-4">{terrarium.name}</h1>
 
         <Row>
+          {/* Controls Panel */}
           <Col md={6} className="mb-4">
             <Card bg="dark" text="white" className="h-100 shadow-sm">
               <Card.Header className="d-flex justify-content-between align-items-center">
-                <Form.Check 
+                <Form.Check
                   type="switch"
                   id="day-night-switch"
                   label={terrarium.day ? 'Day Mode' : 'Night Mode'}
                   checked={terrarium.day}
-                  onChange={() => axios.put(
-                    `${BASE_URL}/terrariums/${id}/day`,
-                    { day: !terrarium.day },
-                    { headers: { Authorization: `Bearer ${token}` }}
-                  ).then(({data}) => setTerrarium(prev => ({ ...prev, day: data.day })))}
+                  onChange={() => handleDaySwitch(!terrarium.day)}
                 />
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline-light"
                   onClick={() => handleUpdate({ manual_mode: !terrarium.manual_mode })}
                 >
@@ -95,13 +103,14 @@ export default function TerrariumDetailPage() {
               </Card.Header>
               <Card.Body>
                 {terrarium.manual_mode
-                  ? <ManualControlPanel terrarium={terrarium} onUpdate={handleUpdate} />
-                  : <AutomaticSettingsPanel terrarium={terrarium} onUpdate={handleUpdate} />
+                  ? <ManualControlPanel terrarium={terrarium} onUpdate={handleUpdate}/>
+                  : <AutomaticSettingsPanel terrarium={terrarium} onUpdate={handleUpdate}/>
                 }
               </Card.Body>
             </Card>
           </Col>
 
+          {/* Readings Panel */}
           <Col md={6} className="mb-4">
             <Card bg="dark" text="white" className="h-100 shadow-sm">
               <Card.Header>Recent Readings</Card.Header>
@@ -109,21 +118,10 @@ export default function TerrariumDetailPage() {
                 {readings.length === 0
                   ? <div className="p-3 text-center">No readings.</div>
                   : (
-                    <Table 
-                      variant="dark" 
-                      hover 
-                      responsive 
-                      className="mb-0" 
-                      style={{ maxHeight: '400px', overflowY: 'auto', display: 'block' }}
-                    >
+                    <Table variant="dark" hover responsive className="mb-0" style={{ maxHeight: 400, overflowY: 'auto', display: 'block' }}>
                       <thead>
                         <tr>
-                          <th>Time</th>
-                          <th>Temp</th>
-                          <th>Hum</th>
-                          <th>Heater</th>
-                          <th>Sprinkler</th>
-                          <th>LEDs</th>
+                          <th>Time</th><th>Temp</th><th>Hum</th><th>Heater</th><th>Sprinkler</th><th>LEDs</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -132,15 +130,14 @@ export default function TerrariumDetailPage() {
                             <td>{new Date(r.created_at).toLocaleTimeString()}</td>
                             <td>{Number(r.temperature).toFixed(1)}</td>
                             <td>{Number(r.humidity).toFixed(1)}</td>
-                            <td> {r.heater_on      ? '✔' : '✖'} </td>
-                            <td> {r.sprinkler_on  ? '✔' : '✖'} </td>
-                            <td> {r.leds_on        ? '✔' : '✖'} </td>
+                            <td>{r.heater_on ? '✔' : '✖'}</td>
+                            <td>{r.sprinkler_on ? '✔' : '✖'}</td>
+                            <td>{r.leds_on ? '✔' : '✖'}</td>
                           </tr>
                         ))}
                       </tbody>
                     </Table>
-                  )
-                }
+                  )}
               </Card.Body>
             </Card>
           </Col>
