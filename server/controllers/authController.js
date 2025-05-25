@@ -17,7 +17,7 @@ const register = async (req, res) => {
     );
 
     const token = jwt.sign({ id: newUser.rows[0].id }, process.env.JWT_SECRET, {
-      expiresIn: '1h',
+      expiresIn: '365d',
     });
 
     res.status(201).json({ message: 'User created', token });

@@ -14,7 +14,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/terrariums/:id" element={<TerrariumDetailPage />} /> {/* Update to match /terrariums/:id */}
+          <Route path="/terrariums/:id" element={<TerrariumDetailPage />} />
           <Route path="/" element={<LoginPage />} />
         </Routes>
       </Router>
