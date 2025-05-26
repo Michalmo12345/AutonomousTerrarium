@@ -16,6 +16,7 @@
         "shared_data.h": "c",
         "led_strip.h": "c",
         "rmt_tx.h": "c",
-        "rmt_rx.h": "c"
+        "rmt_rx.h": "c",
+        "task.h": "c"
     }
 }

@@ -10,7 +10,7 @@
 #include "lcd.h"
 #include "shared_data.h"
 #include "sensor_temp_humidity.h"
-#include "pid.h"
+#include "led_task.h"
 
 // PID_t pid;
 void app_main(void)
@@ -40,4 +40,5 @@ void app_main(void)
     xTaskCreate(http_post_task, "http_post_task", 8192, NULL, 5, NULL);
     xTaskCreate(lcd_task, "lcd_task", 2048, NULL, 6, NULL); // check priorities
     xTaskCreate(sensor_task, "sensor_task", 2048, NULL, 5, NULL);
+    xTaskCreate(led_task, "led_task", 4096, NULL, 4, NULL);
 }
