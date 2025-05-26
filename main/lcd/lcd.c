@@ -126,6 +126,7 @@ void lcd_task(void *pvParameters)
 
         snprintf(line1, sizeof(line1), "Temp: %.1fC", t);
         snprintf(line2, sizeof(line2), "Wilg: %.0f%%", h);
+        ESP_LOGI("LCD", "Aktualizacja ekranu: %.1f / %.1f", t, h);
 
         lcd_clear();
         lcd_gotoxy(0, 0);

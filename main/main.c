@@ -12,14 +12,14 @@
 #include "sensor_temp_humidity.h"
 #include "pid.h"
 
-PID_t pid;
+// PID_t pid;
 void app_main(void)
 {
     ESP_ERROR_CHECK(nvs_flash_init());
     data_mutex = xSemaphoreCreateMutex();
     settings_mutex = xSemaphoreCreateMutex();
 
-    pid_init(&pid, 2.0, 5.0, 1.0, 25.0); // example values
+    // pid_init(&pid, 2.0, 5.0, 1.0, 25.0); // example values
 
     if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(100)))
     {
@@ -38,6 +38,6 @@ void app_main(void)
 
     xTaskCreate(http_get_task, "http_get_task", 8192, NULL, 5, NULL);
     xTaskCreate(http_post_task, "http_post_task", 8192, NULL, 5, NULL);
-    xTaskCreate(lcd_task, "lcd_task", 2048, NULL, 2, NULL);
+    xTaskCreate(lcd_task, "lcd_task", 2048, NULL, 6, NULL); // check priorities
     xTaskCreate(sensor_task, "sensor_task", 2048, NULL, 5, NULL);
 }
