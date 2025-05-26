@@ -11,7 +11,7 @@
 #include "shared_data.h"
 #include "sensor_temp_humidity.h"
 #include "led_task.h"
-
+#include "water_level.h"
 // PID_t pid;
 void app_main(void)
 {
@@ -41,4 +41,5 @@ void app_main(void)
     xTaskCreate(lcd_task, "lcd_task", 2048, NULL, 6, NULL); // check priorities
     xTaskCreate(sensor_task, "sensor_task", 2048, NULL, 5, NULL);
     xTaskCreate(led_task, "led_task", 4096, NULL, 4, NULL);
+    xTaskCreate(water_sensor_task, "water_sensor_task", 2048, NULL, 4, NULL);
 }
