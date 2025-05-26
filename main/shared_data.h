@@ -19,6 +19,8 @@ typedef struct
     bool sprinkler_enabled;
     bool leds_enabled;
     float heater_power_limit;
+    bool manual_mode; // true if manual mode is enabled
+    int color;        // RGB color for LEDs
     TickType_t last_updated;
 } app_settings_t;
 

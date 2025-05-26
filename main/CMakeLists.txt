@@ -8,6 +8,7 @@ idf_component_register(
          "led_strip/led_rgb.c"
          "pid/pid.c"
          "control/heater_control.c"
+         "control/pump_control.c"
     INCLUDE_DIRS "."
                  "network" "lcd" "sensors" "led_strip" "pid" "control"
 )

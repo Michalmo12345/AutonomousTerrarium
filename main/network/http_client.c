@@ -31,8 +31,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 void http_post_task(void *pvParameters)
 {
     const char *url = "http://13.60.201.150:5000/api/readings/20";
-    const char *token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ2OTkxNjExLCJleHAiOjE3NDY5OTUyMTF9.Tfks1jOA3wc_TGwjvsANLzXD1SUR70v1cumiobcNTGo";
-
+    // const char *token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ2OTkxNjExLCJleHAiOjE3NDY5OTUyMTF9.Tfks1jOA3wc_TGwjvsANLzXD1SUR70v1cumiobcNTGo";
+    const char *token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ3ODA3OTAxLCJleHAiOjE3NzkzNDM5MDF9.7s9vL_HP9saC8MBYWEs5nHKecVHnqW60tOWyz38UBXQ";
     char post_data[128];
 
     while (1)
@@ -60,7 +60,10 @@ void http_post_task(void *pvParameters)
         esp_http_client_handle_t client = esp_http_client_init(&config);
         esp_http_client_set_method(client, HTTP_METHOD_POST);
         esp_http_client_set_header(client, "Content-Type", "application/json");
-        esp_http_client_set_header(client, "Authorization", token);
+        char auth_header[256];
+        snprintf(auth_header, sizeof(auth_header), "Bearer %s", token);
+        esp_http_client_set_header(client, "Authorization", auth_header);
+        // esp_http_client_set_header(client, "Authorization", token);
         esp_http_client_set_post_field(client, post_data, strlen(post_data));
 
         esp_err_t err = esp_http_client_perform(client);
@@ -81,8 +84,8 @@ void http_post_task(void *pvParameters)
 void http_get_task(void *pvParameters)
 {
     const char *url = "http://13.60.201.150:5000/api/terrariums/20/settings";
-    const char *token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ2OTkxNjExLCJleHAiOjE3NDY5OTUyMTF9.Tfks1jOA3wc_TGwjvsANLzXD1SUR70v1cumiobcNTGo";
-
+    // const char *token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ2OTkxNjExLCJleHAiOjE3NDY5OTUyMTF9.Tfks1jOA3wc_TGwjvsANLzXD1SUR70v1cumiobcNTGo";
+    const char *token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ3ODA3OTAxLCJleHAiOjE3NzkzNDM5MDF9.7s9vL_HP9saC8MBYWEs5nHKecVHnqW60tOWyz38UBXQ";
     static char response_buffer[512];
 
     esp_http_client_config_t config = {
@@ -102,7 +105,10 @@ void http_get_task(void *pvParameters)
         esp_http_client_handle_t client = esp_http_client_init(&config);
         esp_http_client_set_method(client, HTTP_METHOD_GET);
         esp_http_client_set_header(client, "Content-Type", "application/json");
-        esp_http_client_set_header(client, "Authorization", token);
+        char auth_header[256];
+        snprintf(auth_header, sizeof(auth_header), "Bearer %s", token);
+        esp_http_client_set_header(client, "Authorization", auth_header);
+        // esp_http_client_set_header(client, "Authorization", token);
         esp_http_client_set_header(client, "Connection", "close");
 
         esp_err_t err = esp_http_client_perform(client);
