@@ -23,7 +23,6 @@ void pump_control_task(void *pvParameter)
 
     while (1)
     {
-
         float current_humidity = 0;
         float target_humidity = 0;
         bool sprinkler_enabled = false;

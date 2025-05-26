@@ -7,6 +7,7 @@ typedef struct
     float humidity;
     bool water_level_ok;
     float heater_power;
+    bool heater_on;
     bool sprinkler_on;
     bool leds_on;
     TickType_t last_update;
@@ -18,6 +19,7 @@ typedef struct
     float target_humidity;
     bool sprinkler_enabled;
     bool leds_enabled;
+    bool heater_enabled;
     float heater_power_limit;
     bool manual_mode; // true if manual mode is enabled
     int color;        // RGB color for LEDs
