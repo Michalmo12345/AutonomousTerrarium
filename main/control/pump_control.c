@@ -34,9 +34,11 @@ void pump_control_task(void *pvParameter)
         float target_humidity = 0;
         bool sprinkler_enabled = false;
         bool manual_mode = false;
+        bool water_level_ok = false;
         if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(100)))
         {
             current_humidity = shared_data.humidity;
+            water_level_ok = shared_data.water_level_ok;
             xSemaphoreGive(data_mutex);
         }
 
@@ -45,37 +47,47 @@ void pump_control_task(void *pvParameter)
             target_humidity = app_settings.target_humidity;
             sprinkler_enabled = app_settings.sprinkler_enabled;
             manual_mode = app_settings.manual_mode;
+
             xSemaphoreGive(settings_mutex);
         }
 
         ESP_LOGI("PUMP_CONTROL", "Wilgotność: %.1f%% / %.1f%%", current_humidity, target_humidity);
-
-        if (!manual_mode)
+        if (!water_level_ok)
         {
-            if (!pump_on && current_humidity < (target_humidity - HUMIDITY_HYSTERESIS))
+            ESP_LOGW("PUMP_CONTROL", "Brak wody w zbiorniku, pompa nie będzie działać");
+            pump_on = false;
+            gpio_set_level(GPIO_PUMP_PIN, 1); // wyłącz pompę
+        }
+        else
+        {
+            // odwrócona logika gpio
+            if (!manual_mode)
             {
-                pump_on = true;
-                gpio_set_level(GPIO_PUMP_PIN, 1);
-                ESP_LOGI("PUMP_CONTROL", "Pompa WŁĄCZONA");
+                if (!pump_on && current_humidity < (target_humidity - HUMIDITY_HYSTERESIS))
+                {
+                    pump_on = true;
+                    gpio_set_level(GPIO_PUMP_PIN, 0);
+                    ESP_LOGI("PUMP_CONTROL", "Pompa WŁĄCZONA");
+                }
+                else if (pump_on && current_humidity > (target_humidity + HUMIDITY_HYSTERESIS))
+                {
+                    pump_on = false;
+                    gpio_set_level(GPIO_PUMP_PIN, 1);
+                    ESP_LOGI("PUMP_CONTROL", "Pompa WYŁĄCZONA");
+                }
             }
-            else if (pump_on && current_humidity > (target_humidity + HUMIDITY_HYSTERESIS))
+            else if (manual_mode && !sprinkler_enabled)
             {
                 pump_on = false;
-                gpio_set_level(GPIO_PUMP_PIN, 0);
-                ESP_LOGI("PUMP_CONTROL", "Pompa WYŁĄCZONA");
+                gpio_set_level(GPIO_PUMP_PIN, 1);
+                ESP_LOGI("PUMP_CONTROL", "Podlewanie wyłączone w ustawieniach");
             }
-        }
-        else if (manual_mode && !sprinkler_enabled)
-        {
-            pump_on = false;
-            gpio_set_level(GPIO_PUMP_PIN, 0);
-            ESP_LOGI("PUMP_CONTROL", "Podlewanie wyłączone w ustawieniach");
-        }
-        else if (manual_mode && sprinkler_enabled)
-        {
-            pump_on = true;
-            gpio_set_level(GPIO_PUMP_PIN, 1);
-            ESP_LOGI("PUMP_CONTROL", "Podlewanie włączone w ustawieniach");
+            else if (manual_mode && sprinkler_enabled)
+            {
+                pump_on = true;
+                gpio_set_level(GPIO_PUMP_PIN, 0);
+                ESP_LOGI("PUMP_CONTROL", "Podlewanie włączone w ustawieniach");
+            }
         }
         if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(100)))
         {

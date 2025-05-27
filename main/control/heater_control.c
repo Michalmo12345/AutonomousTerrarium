@@ -44,31 +44,32 @@ void heater_control_task(void *pvParameter)
 
         ESP_LOGI("HEATER_CONTROL", "Temperatura: %.1f°C / %.1f°C", current_temp, target_temp);
 
+        // odwrócona logika GPIO
         if (!manual_mode)
         {
             if (!heater_on && current_temp < (target_temp - TEMPERATURE_HYSTERESIS))
             {
                 heater_on = true;
-                gpio_set_level(GPIO_HEATER_PIN, 1);
+                gpio_set_level(GPIO_HEATER_PIN, 0);
                 ESP_LOGI("HEATER_CONTROL", "Grzałka WŁĄCZONA (automatycznie)");
             }
             else if (heater_on && current_temp > (target_temp + TEMPERATURE_HYSTERESIS))
             {
                 heater_on = false;
-                gpio_set_level(GPIO_HEATER_PIN, 0);
+                gpio_set_level(GPIO_HEATER_PIN, 1);
                 ESP_LOGI("HEATER_CONTROL", "Grzałka WYŁĄCZONA (automatycznie)");
             }
         }
         else if (manual_mode && !heater_enabled)
         {
             heater_on = false;
-            gpio_set_level(GPIO_HEATER_PIN, 0);
+            gpio_set_level(GPIO_HEATER_PIN, 1);
             ESP_LOGI("HEATER_CONTROL", "Grzałka WYŁĄCZONA (ręcznie)");
         }
         else if (manual_mode && heater_enabled)
         {
             heater_on = true;
-            gpio_set_level(GPIO_HEATER_PIN, 1);
+            gpio_set_level(GPIO_HEATER_PIN, 0);
             ESP_LOGI("HEATER_CONTROL", "Grzałka WŁĄCZONA (ręcznie)");
         }
 
