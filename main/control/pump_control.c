@@ -18,9 +18,16 @@ void pump_control_task(void *pvParameter)
 {
     bool pump_on = false;
 
-    gpio_set_direction(GPIO_PUMP_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(GPIO_PUMP_PIN, 0); // domyślnie wyłączona
-
+    // gpio_set_direction(GPIO_PUMP_PIN, GPIO_MODE_OUTPUT);
+    // gpio_set_level(GPIO_PUMP_PIN, 0); // domyślnie wyłączona
+    gpio_config_t io_conf = {
+        .pin_bit_mask = (1ULL << GPIO_PUMP_PIN),
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE};
+    gpio_config(&io_conf);
+    gpio_set_level(GPIO_PUMP_PIN, 0);
     while (1)
     {
         float current_humidity = 0;

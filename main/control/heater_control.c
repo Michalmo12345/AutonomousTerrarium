@@ -5,7 +5,7 @@
 #include "esp_log.h"
 #include "shared_data.h"
 
-#define GPIO_HEATER_PIN 34          // Pin grzałki
+#define GPIO_HEATER_PIN 25          // Pin grzałki
 #define TEMPERATURE_HYSTERESIS 1.0f // Histereza ±1°C
 
 extern system_data_t shared_data;
@@ -77,6 +77,6 @@ void heater_control_task(void *pvParameter)
             shared_data.heater_on = heater_on;
             xSemaphoreGive(data_mutex);
         }
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(3000));
     }
 }
