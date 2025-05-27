@@ -11,7 +11,7 @@ import ReadingChart from '../components/ReadingChart';
 import NavBar from '../components/NavBar';
 
 const BASE_URL = 'http://13.60.201.150:5000/api';
-const REFRESH_INTERVAL = 5000; // milliseconds
+const REFRESH_INTERVAL = 5000;
 
 export default function TerrariumDetailPage() {
   const { id } = useParams();
