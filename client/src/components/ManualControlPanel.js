@@ -4,8 +4,20 @@ import axios from 'axios';
 
 const BASE_URL = 'http://13.60.201.150:5000/api';
 
+// LED color enum mapping
+const COLORS = [
+  { name: 'Off',    value: 0 },
+  { name: 'Green',  value: 1 },
+  { name: 'Red',    value: 2 },
+  { name: 'Blue',   value: 3 },
+  { name: 'Yellow', value: 4 },
+  { name: 'Purple', value: 5 },
+  { name: 'Cyan',   value: 6 },
+  { name: 'White',  value: 7 },
+  { name: 'Orange', value: 8 },
+];
+
 export default function ManualControlPanel({ terrarium, setTerrarium, token }) {
-  // local color state for manual panel
   const [color, setColor] = useState(terrarium.color);
 
   useEffect(() => {
@@ -30,7 +42,7 @@ export default function ManualControlPanel({ terrarium, setTerrarium, token }) {
     try {
       const { data } = await axios.put(
         `${BASE_URL}/terrariums/${terrarium.id}/color`,
-        { color: Number(color) },
+        { color: color },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTerrarium(prev => ({ ...prev, color: data.color }));
@@ -64,12 +76,17 @@ export default function ManualControlPanel({ terrarium, setTerrarium, token }) {
       />
 
       <Form.Group controlId="manualColor" className="mb-3">
-        <Form.Label>Color (integer)</Form.Label>
-        <Form.Control
-          type="number"
+        <Form.Label>LED Color</Form.Label>
+        <Form.Select
           value={color}
-          onChange={e => setColor(e.target.value)}
-        />
+          onChange={e => setColor(Number(e.target.value))}
+        >
+          {COLORS.map(c => (
+            <option key={c.value} value={c.value}>
+              {c.name}
+            </option>
+          ))}
+        </Form.Select>
       </Form.Group>
       <Button variant="primary" onClick={saveColor}>
         Save Color
