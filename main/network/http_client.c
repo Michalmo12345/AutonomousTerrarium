@@ -32,22 +32,34 @@ void http_post_task(void *pvParameters)
 {
     const char *url = "http://13.60.201.150:5000/api/readings/20";
     // const char *token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ2OTkxNjExLCJleHAiOjE3NDY5OTUyMTF9.Tfks1jOA3wc_TGwjvsANLzXD1SUR70v1cumiobcNTGo";
-    const char *token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ3ODA3OTAxLCJleHAiOjE3NzkzNDM5MDF9.7s9vL_HP9saC8MBYWEs5nHKecVHnqW60tOWyz38UBXQ";
-    char post_data[128];
+    const char *token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ4MzQzNzUxLCJleHAiOjE3Nzk4Nzk3NTF9.75Q6W9iCcQ0bOQLacF6QwtcYUOd7jkdY931H7kb978o";
+    char post_data[256];
 
     while (1)
     {
         float temp = 0, hum = 0;
+        bool water_ok = false, heater = false, sprinkler = false, leds = false;
 
         if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(100)))
         {
             temp = shared_data.temperature;
             hum = shared_data.humidity;
+            water_ok = shared_data.water_level_ok;
+            heater = shared_data.heater_on;
+            sprinkler = shared_data.sprinkler_on;
+            leds = shared_data.leds_on;
             xSemaphoreGive(data_mutex);
         }
 
         snprintf(post_data, sizeof(post_data),
-                 "{\"temperature\":%.1f,\"humidity\":%.1f}", temp, hum);
+                 "{\"temperature\":%.1f,\"humidity\":%.1f,"
+                 "\"water_level_ok\":%s,\"heater_on\":%s,"
+                 "\"sprinkler_on\":%s,\"leds_on\":%s}",
+                 temp, hum,
+                 water_ok ? "true" : "false",
+                 heater ? "true" : "false",
+                 sprinkler ? "true" : "false",
+                 leds ? "true" : "false");
 
         esp_http_client_config_t config = {
             .url = url,
@@ -85,7 +97,7 @@ void http_get_task(void *pvParameters)
 {
     const char *url = "http://13.60.201.150:5000/api/terrariums/20/settings";
     // const char *token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ2OTkxNjExLCJleHAiOjE3NDY5OTUyMTF9.Tfks1jOA3wc_TGwjvsANLzXD1SUR70v1cumiobcNTGo";
-    const char *token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ3ODA3OTAxLCJleHAiOjE3NzkzNDM5MDF9.7s9vL_HP9saC8MBYWEs5nHKecVHnqW60tOWyz38UBXQ";
+    const char *token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ4MzQzNzUxLCJleHAiOjE3Nzk4Nzk3NTF9.75Q6W9iCcQ0bOQLacF6QwtcYUOd7jkdY931H7kb978o";
     static char response_buffer[512];
 
     esp_http_client_config_t config = {
@@ -118,22 +130,40 @@ void http_get_task(void *pvParameters)
             if (root)
             {
                 cJSON *temp = cJSON_GetObjectItem(root, "temperature");
+                cJSON *sprinkler = cJSON_GetObjectItem(root, "sprinkler_enabled");
+                cJSON *leds = cJSON_GetObjectItem(root, "leds_enabled");
+                cJSON *heater = cJSON_GetObjectItem(root, "heater_enabled");
+                cJSON *manual = cJSON_GetObjectItem(root, "manual_mode");
+                cJSON *color = cJSON_GetObjectItem(root, "color");
                 cJSON *hum = cJSON_GetObjectItem(root, "humidity");
 
-                if (cJSON_IsNumber(temp) && cJSON_IsNumber(hum))
+                if (cJSON_IsNumber(temp) &&
+                    cJSON_IsBool(sprinkler) &&
+                    cJSON_IsBool(leds) &&
+                    cJSON_IsBool(heater) &&
+                    cJSON_IsBool(manual) &&
+                    cJSON_IsNumber(color) &&
+                    cJSON_IsNumber(hum))
                 {
                     if (xSemaphoreTake(settings_mutex, pdMS_TO_TICKS(100)))
                     {
                         app_settings.target_temperature = temp->valuedouble;
                         app_settings.target_humidity = hum->valuedouble;
+                        app_settings.sprinkler_enabled = cJSON_IsTrue(sprinkler);
+                        app_settings.leds_enabled = cJSON_IsTrue(leds);
+                        app_settings.heater_enabled = cJSON_IsTrue(heater);
+                        app_settings.manual_mode = cJSON_IsTrue(manual);
+                        app_settings.color = color->valueint;
+                        app_settings.heater_power_limit = 0.0f; // brak w JSON – ustaw domyślnie
                         app_settings.last_updated = xTaskGetTickCount();
-                        ESP_LOGI("APP_SETTINGS", "Zapisano ustawienia:");
+
+                        ESP_LOGI("APP_SETTINGS", "Zaktualizowano ustawienia:");
                         ESP_LOGI("APP_SETTINGS", "T=%.1f, H=%.1f", app_settings.target_temperature, app_settings.target_humidity);
                         ESP_LOGI("APP_SETTINGS", "sprinkler_enabled = %s", app_settings.sprinkler_enabled ? "true" : "false");
-                        ESP_LOGI("APP_SETTINGS", "leds_enabled      = %s", app_settings.leds_enabled ? "true" : "false");
-                        ESP_LOGI("APP_SETTINGS", "heater_power_limit = %.1f", app_settings.heater_power_limit);
-                        ESP_LOGI("APP_SETTINGS", "last_updated = %lu", app_settings.last_updated);
-
+                        ESP_LOGI("APP_SETTINGS", "leds_enabled = %s", app_settings.leds_enabled ? "true" : "false");
+                        ESP_LOGI("APP_SETTINGS", "heater_enabled = %s", app_settings.heater_enabled ? "true" : "false");
+                        ESP_LOGI("APP_SETTINGS", "manual_mode = %s", app_settings.manual_mode ? "true" : "false");
+                        ESP_LOGI("APP_SETTINGS", "color = %d", app_settings.color);
                         xSemaphoreGive(settings_mutex);
                     }
 

@@ -7,8 +7,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define LED_STRIP_GPIO 18
-#define NUM_LEDS 1
+#define LED_STRIP_GPIO 12
+#define NUM_LEDS 10
 
 static const char *TAG = "LED_TASK";
 

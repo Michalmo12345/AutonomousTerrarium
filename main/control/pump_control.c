@@ -5,7 +5,7 @@
 #include "esp_log.h"
 #include "shared_data.h"
 
-#define GPIO_PUMP_PIN 14         // Dostosuj ten pin do swojego układu
+#define GPIO_PUMP_PIN 27         // Dostosuj ten pin do swojego układu
 #define HUMIDITY_HYSTERESIS 5.0f // Histereza: ±5%
 
 extern system_data_t shared_data;

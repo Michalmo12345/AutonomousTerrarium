@@ -5,7 +5,7 @@
 #include "esp_log.h"
 #include "shared_data.h"
 
-#define GPIO_HEATER_PIN 13          // Pin grzałki
+#define GPIO_HEATER_PIN 34          // Pin grzałki
 #define TEMPERATURE_HYSTERESIS 1.0f // Histereza ±1°C
 
 extern system_data_t shared_data;

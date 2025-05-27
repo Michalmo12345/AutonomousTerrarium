@@ -5,7 +5,7 @@
 #include "esp_log.h"
 #include "freertos/task.h"
 
-#define WATER_SENSOR_GPIO 111 // Dostosuj do używanego pinu GPIO
+#define WATER_SENSOR_GPIO 32 // Dostosuj do używanego pinu GPIO
 #define POLL_INTERVAL_MS 1000
 
 static const char *TAG = "WATER_SENSOR";
@@ -18,7 +18,7 @@ void water_sensor_task(void *pvParameters)
     gpio_config_t io_conf = {
         .pin_bit_mask = (1ULL << WATER_SENSOR_GPIO),
         .mode = GPIO_MODE_INPUT,
-        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_up_en = GPIO_PULLUP_ENABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
         .intr_type = GPIO_INTR_DISABLE};
     gpio_config(&io_conf);

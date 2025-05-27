@@ -4,7 +4,7 @@
 #include "sensor_temp_humidity.h"
 #include "dht.h"
 
-#define DHT_GPIO 18
+#define DHT_GPIO 33
 
 void sensor_task(void *pvParameters)
 {
