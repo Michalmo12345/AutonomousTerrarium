@@ -33,8 +33,16 @@ void app_main(void)
     lcd_write_str("Terrarium");
     lcd_gotoxy(0, 1);
     lcd_write_str("Laczenie...");
-    wifi_init_sta();
-    lcd_write_str("WiFi gotowe");
+    if (wifi_init_sta())
+    {
+        lcd_gotoxy(0, 1);
+        lcd_write_str("WiFi OK     ");
+    }
+    else
+    {
+        lcd_gotoxy(0, 1);
+        lcd_write_str("WiFi blad   ");
+    }
 
     xTaskCreate(http_get_task, "http_get_task", 8192, NULL, 5, NULL);
     xTaskCreate(http_post_task, "http_post_task", 8192, NULL, 5, NULL);

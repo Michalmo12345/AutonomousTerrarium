@@ -28,7 +28,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
     }
 }
 
-void wifi_init_sta(void)
+bool wifi_init_sta(void)
 {
     wifi_event_group = xEventGroupCreate();
 
@@ -54,6 +54,23 @@ void wifi_init_sta(void)
     esp_wifi_start();
 
     ESP_LOGI(TAG, "Laczenie z WiFi...");
-    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
-    ESP_LOGI(TAG, "Polaczono z WiFi");
+
+    EventBits_t bits = xEventGroupWaitBits(
+        wifi_event_group,
+        WIFI_CONNECTED_BIT,
+        pdFALSE,
+        pdFALSE,
+        pdMS_TO_TICKS(10000) // 10 sekund timeout
+    );
+
+    if (bits & WIFI_CONNECTED_BIT)
+    {
+        ESP_LOGI(TAG, "Polaczono z WiFi");
+        return true;
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Timeout laczenia z WiFi");
+        return false;
+    }
 }
