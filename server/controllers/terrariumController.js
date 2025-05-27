@@ -95,7 +95,6 @@ const getSettings = async (req, res) => {
 
     const result = await pool.query(
       `SELECT 
-         day,
          day_temperature,
          night_temperature,
          humidity,
@@ -116,7 +115,6 @@ const getSettings = async (req, res) => {
     const t = result.rows[0];
 
     const temperature = t.day ? t.day_temperature : t.night_temperature;
-    const humidity = t.day ? t.day_humidity_target : t.night_humidity_target;
 
     res.json({
       temperature,
