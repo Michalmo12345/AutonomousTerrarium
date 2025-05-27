@@ -118,7 +118,7 @@ const getSettings = async (req, res) => {
 
     res.json({
       temperature,
-      humidity,
+      humidity : t.humidity,
       sprinkler_enabled: t.sprinkler_enabled,
       leds_enabled: t.leds_enabled,
       heater_enabled: t.heater_enabled,
