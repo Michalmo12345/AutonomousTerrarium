@@ -1,7 +1,6 @@
 import { Form, Button } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-const [error, setError] = useState('');
 
 const BASE_URL = 'http://13.60.201.150:5000/api';
 
@@ -29,7 +28,7 @@ export default function AutomaticSettingsPanel({ terrarium, id, token, setTerrar
       [name]: type === 'checkbox' ? checked : parseFloat(value)
     }));
   };
-
+  const [error, setError] = useState('');
   const saveTemperatureHumidity = async () => {
     const temperature = Number(form.temperature);
     const humidity = Number(form.humidity);
