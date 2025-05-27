@@ -23,7 +23,6 @@ export default function TerrariumDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Fetch details and readings
   const fetchData = async () => {
     try {
       const [terrRes, readRes] = await Promise.all([

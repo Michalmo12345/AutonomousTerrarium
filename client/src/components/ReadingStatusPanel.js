@@ -22,7 +22,7 @@ export default function ReadingStatusPanel({ latest }) {
       <Card.Body>
         <div className="mb-2">
           <StatusDot value={latest.water_level_ok} />
-          Water Level OK
+          Water Level
         </div>
         <div className="mb-2">
           <StatusDot value={latest.heater_on} />
