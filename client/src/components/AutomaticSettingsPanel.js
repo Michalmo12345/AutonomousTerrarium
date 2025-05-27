@@ -1,7 +1,7 @@
 import { Form, Button } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-
+const [error, setError] = useState('');
 const BASE_URL = 'http://13.60.201.150:5000/api';
 
 export default function AutomaticSettingsPanel({ terrarium, id, token, setTerrarium }) {
@@ -30,21 +30,30 @@ export default function AutomaticSettingsPanel({ terrarium, id, token, setTerrar
   };
 
   const saveTemperatureHumidity = async () => {
-    const { data } = await axios.put(
-      `${BASE_URL}/terrariums/${id}`,
-      { temperature: form.temperature, humidity: form.humidity },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setTerrarium(prev => ({ ...prev, ...data }));
-  };
-
-  const saveColor = async () => {
-    const { data } = await axios.put(
-      `${BASE_URL}/terrariums/${id}/color`,
-      { color: form.color },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setTerrarium(prev => ({ ...prev, color: data.color }));
+    const temperature = Number(form.temperature);
+    const humidity = Number(form.humidity);
+  
+    if (
+      Number.isNaN(temperature) || Number.isNaN(humidity) ||
+      temperature <= 0 || temperature >= 100 ||
+      humidity <= 0 || humidity >= 100
+    ) {
+      setError('Temperature and humidity must be numbers between 0 and 100');
+      return;
+    }
+  
+    try {
+      const { data } = await axios.put(
+        `${BASE_URL}/terrariums/${id}`,
+        { temperature, humidity },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTerrarium(prev => ({ ...prev, ...data }));
+      setError('');
+    } catch (error) {
+      console.error('Failed to update:', error);
+      setError(error.response?.data?.error || 'Failed to update terrarium');
+    }
   };
 
   return (
