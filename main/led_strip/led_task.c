@@ -8,7 +8,7 @@
 #include "freertos/task.h"
 
 #define LED_STRIP_GPIO 12
-#define NUM_LEDS 10
+#define NUM_LEDS 3
 
 static const char *TAG = "LED_TASK";
 
@@ -68,10 +68,25 @@ void led_task(void *pvParameters)
 
         rgb_color_t color = (manual && enabled) ? get_color_from_enum(color_index) : (rgb_color_t){0, 0, 0};
 
+        ESP_LOGI(TAG, "manual=%s, enabled=%s, color_index=%d, color=(R:%d G:%d B:%d)",
+                 manual ? "true" : "false",
+                 enabled ? "true" : "false",
+                 color_index,
+                 color.r, color.g, color.b);
+
         rgb_t rgb = {.r = color.r, .g = color.g, .b = color.b};
 
-        led_strip_set_pixel(&strip, 0, rgb);
-        led_strip_flush(&strip);
+        esp_err_t err = led_strip_set_pixel(&strip, 0, rgb);
+        if (err != ESP_OK)
+        {
+            ESP_LOGE(TAG, "led_strip_set_pixel failed: %s", esp_err_to_name(err));
+        }
+
+        err = led_strip_flush(&strip);
+        if (err != ESP_OK)
+        {
+            ESP_LOGE(TAG, "led_strip_flush failed: %s", esp_err_to_name(err));
+        }
 
         vTaskDelay(pdMS_TO_TICKS(500));
     }

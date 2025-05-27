@@ -33,7 +33,17 @@ static void lcd_write_byte(uint8_t data)
     i2c_master_write_byte(cmd, (LCD_ADDR << 1) | I2C_MASTER_WRITE, true);
     i2c_master_write_byte(cmd, data, true);
     i2c_master_stop(cmd);
-    i2c_master_cmd_begin(I2C_PORT, cmd, pdMS_TO_TICKS(1000));
+
+    esp_err_t ret = i2c_master_cmd_begin(I2C_PORT, cmd, pdMS_TO_TICKS(1000));
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE("LCD", "I2C cmd failed: %s (data=0x%02X)", esp_err_to_name(ret), data);
+    }
+    else
+    {
+        ESP_LOGD("LCD", "I2C cmd success (data=0x%02X)", data);
+    }
+
     i2c_cmd_link_delete(cmd);
 }
 
@@ -88,6 +98,7 @@ void lcd_init(void)
 
 void lcd_clear(void)
 {
+    ESP_LOGI("LCD", "Clearing display");
     lcd_send_cmd(0x01);
     vTaskDelay(pdMS_TO_TICKS(2));
 }
@@ -95,16 +106,20 @@ void lcd_clear(void)
 void lcd_gotoxy(uint8_t col, uint8_t row)
 {
     const uint8_t row_offsets[] = {0x00, 0x40, 0x14, 0x54};
-    lcd_send_cmd(0x80 | (col + row_offsets[row]));
+    uint8_t pos = col + row_offsets[row];
+    ESP_LOGD("LCD", "Setting cursor position to col=%d row=%d (pos=0x%02X)", col, row, pos);
+    lcd_send_cmd(0x80 | pos);
 }
 
 void lcd_write_char(char c)
 {
+    ESP_LOGD("LCD", "Writing char '%c' (0x%02X)", c, (uint8_t)c);
     lcd_send_data(c);
 }
 
 void lcd_write_str(const char *str)
 {
+    ESP_LOGD("LCD", "Writing string: %s", str);
     while (*str)
         lcd_write_char(*str++);
 }
@@ -134,6 +149,6 @@ void lcd_task(void *pvParameters)
         lcd_gotoxy(0, 1);
         lcd_write_str(line2);
 
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(5000));
     }
 }

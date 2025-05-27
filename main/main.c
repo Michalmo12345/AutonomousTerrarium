@@ -43,10 +43,10 @@ void app_main(void)
         lcd_gotoxy(0, 1);
         lcd_write_str("WiFi blad   ");
     }
-
+    xTaskCreate(lcd_task, "lcd_task", 8192, NULL, 9, NULL);
     xTaskCreate(http_get_task, "http_get_task", 8192, NULL, 5, NULL);
     xTaskCreate(http_post_task, "http_post_task", 8192, NULL, 5, NULL);
-    xTaskCreate(lcd_task, "lcd_task", 2048, NULL, 6, NULL); // check priorities
+    // check priorities
     xTaskCreate(sensor_task, "sensor_task", 2048, NULL, 5, NULL);
     xTaskCreate(led_task, "led_task", 4096, NULL, 4, NULL);
     xTaskCreate(water_sensor_task, "water_sensor_task", 2048, NULL, 4, NULL);
