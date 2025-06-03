@@ -2,7 +2,7 @@ import { Form, Button, Card } from 'react-bootstrap';
 import { useState } from 'react';
 import axios from 'axios';
 
-const BASE_URL = 'http://13.60.201.150:5000/api';
+const BASE_URL = 'http://13.51.108.48:5000/api';
 
 export default function ReadingControlPanel({ terrarium, token, setTerrarium }) {
   const [controls, setControls] = useState({

@@ -1,5 +1,5 @@
 import { Navbar, Nav, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../authContext';
 
 const NavBar = () => {
@@ -13,11 +13,18 @@ const NavBar = () => {
 
   return (
     <Navbar bg="dark" variant="dark" expand="lg" className="mb-4">
-      <Navbar.Brand href="/dashboard" className="ms-3">
+      <Navbar.Brand as={Link} to="/dashboard" className="ms-3">
         Terrarium Manager
       </Navbar.Brand>
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav">
+        <Nav className="me-auto ms-3">
+          {token && (
+            <Nav.Link as={Link} to="/profile">
+              Profile
+            </Nav.Link>
+          )}
+        </Nav>
         <Nav className="ms-auto me-3">
           {token ? (
             <Button variant="outline-light" onClick={handleLogout}>
@@ -25,8 +32,8 @@ const NavBar = () => {
             </Button>
           ) : (
             <>
-              <Nav.Link href="/login">Login</Nav.Link>
-              <Nav.Link href="/register">Register</Nav.Link>
+              <Nav.Link as={Link} to="/login">Login</Nav.Link>
+              <Nav.Link as={Link} to="/register">Register</Nav.Link>
             </>
           )}
         </Nav>

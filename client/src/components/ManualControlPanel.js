@@ -2,7 +2,7 @@ import { Form, Button } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const BASE_URL = 'http://13.60.201.150:5000/api';
+const BASE_URL = 'http://13.51.108.48:5000/api';
 
 // LED color enum mapping
 const COLORS = [

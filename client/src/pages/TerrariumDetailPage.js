@@ -10,7 +10,7 @@ import ReadingStatusPanel from '../components/ReadingStatusPanel';
 import ReadingChart from '../components/ReadingChart';
 import NavBar from '../components/NavBar';
 
-const BASE_URL = 'http://13.60.201.150:5000/api';
+const BASE_URL = 'http://13.51.108.48:5000/api';
 const REFRESH_INTERVAL = 5000;
 
 export default function TerrariumDetailPage() {
@@ -22,6 +22,7 @@ export default function TerrariumDetailPage() {
   const [readings, setReadings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showFeedAlert, setShowFeedAlert] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -46,6 +47,18 @@ export default function TerrariumDetailPage() {
     const interval = setInterval(fetchData, REFRESH_INTERVAL);
     return () => clearInterval(interval);
   }, [id, token, navigate]);
+
+  // Feed notification logic
+  useEffect(() => {
+    const showAlert = () => {
+      setShowFeedAlert(true);
+      setTimeout(() => setShowFeedAlert(false), 5000);
+    };
+
+    showAlert(); // show immediately once
+    const interval = setInterval(showAlert, 5 * 60 * 1000); // every 5 mins
+    return () => clearInterval(interval);
+  }, []);
 
   const handleDaySwitch = async (value) => {
     try {
@@ -73,20 +86,35 @@ export default function TerrariumDetailPage() {
     }
   };
 
-  if (loading) return <><NavBar /><Container className="py-5 text-center"><Spinner animation="border"/></Container></>;
-  if (error)   return <><NavBar /><Container className="py-5"><Alert variant="danger">{error}</Alert><Link to="/dashboard" className="btn btn-outline-light">Back</Link></Container></>;
+  if (loading) return <><NavBar /><Container className="py-5 text-center"><Spinner animation="border" /></Container></>;
+  if (error) return <><NavBar /><Container className="py-5"><Alert variant="danger">{error}</Alert><Link to="/dashboard" className="btn btn-outline-light">Back</Link></Container></>;
 
   const latest = readings[0] || null;
 
   return (
     <>
+      {showFeedAlert && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 9999,
+          width: 'auto',
+          maxWidth: '90%',
+        }}>
+          <Alert variant="warning" className="text-center m-0">
+            🐾 Don’t forget to feed your animal!
+          </Alert>
+        </div>
+      )}
+
       <NavBar />
       <Container className="py-5">
         <Link to="/dashboard" className="btn btn-outline-light mb-4">← Dashboard</Link>
         <h1 className="text-white mb-4">{terrarium.name}</h1>
 
         <Row>
-          {/* Settings Panel */}
           <Col md={6} className="mb-4">
             <Card bg="dark" text="white" className="h-100 shadow-sm">
               <Card.Header className="d-flex justify-content-between align-items-center">
@@ -114,13 +142,11 @@ export default function TerrariumDetailPage() {
             </Card>
           </Col>
 
-          {/* Status Panel */}
           <Col md={6} className="mb-4">
             <ReadingStatusPanel latest={latest} />
           </Col>
         </Row>
 
-        {/* Chart Panel */}
         <Row className="mt-4">
           <Col>
             <ReadingChart readings={readings} />

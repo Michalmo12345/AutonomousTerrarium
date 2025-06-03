@@ -2,7 +2,7 @@ import { Form, Button } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const BASE_URL = 'http://13.60.201.150:5000/api';
+const BASE_URL = 'http://13.51.108.48:5000/api';
 
 const COLORS = [
   { name: 'Off',    value: 0 },
@@ -108,33 +108,6 @@ export default function AutomaticSettingsPanel({ terrarium, id, token, setTerrar
 
       <Button variant="primary" className="w-100 mb-3" onClick={saveTemperatureHumidity}>
         Save Temp & Humidity
-      </Button>
-
-      <Form.Check
-        type="switch"
-        id="auto-led-switch"
-        label="LEDs"
-        name="leds_enabled"
-        checked={form.leds_enabled}
-        onChange={() => setForm(f => ({ ...f, leds_enabled: !f.leds_enabled }))}
-        className="mb-3"
-      />
-
-      <Form.Group controlId="autoColor" className="mb-3">
-        <Form.Label>LED Color</Form.Label>
-        <Form.Select
-          value={color}
-          onChange={e => setColor(Number(e.target.value))}
-        >
-          {COLORS.map(c => (
-            <option key={c.value} value={c.value}>
-              {c.name}
-            </option>
-          ))}
-        </Form.Select>
-      </Form.Group>
-      <Button variant="primary" className="w-100" onClick={saveColor}>
-        Save Color
       </Button>
     </Form>
   );
