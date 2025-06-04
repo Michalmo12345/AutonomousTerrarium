@@ -51,7 +51,7 @@ void app_main(void)
     xTaskCreate(http_post_task, "http_post_task", 8192, NULL, 5, NULL);
     // check priorities
     xTaskCreate(sensor_task, "sensor_task", 2048, NULL, 5, NULL);
-    // xTaskCreate(led_task, "led_task", 4096, NULL, 4, NULL);
+    xTaskCreate(led_task, "led_task", 4096, NULL, 4, NULL);
     xTaskCreate(water_sensor_task, "water_sensor_task", 2048, NULL, 4, NULL);
     xTaskCreate(heater_control_task, "heater_control_task", 2048, NULL, 4, NULL);
     xTaskCreate(pump_control_task, "pump_control_task", 2048, NULL, 4, NULL);
