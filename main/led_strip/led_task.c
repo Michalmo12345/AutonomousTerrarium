@@ -1,116 +1,68 @@
+// led_strip_task.c
 #include "led_task.h"
-#include "shared_data.h"
-
-#include "led_strip.h"
-#include "driver/gpio.h"
 #include "esp_log.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "driver/rmt_tx.h"
+#include "led_strip_encoder.h"
+#include <string.h>
 
-#define LED_STRIP_GPIO 12
-#define NUM_LEDS 3
+#define RMT_LED_STRIP_RESOLUTION_HZ 10000000 // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
+#define RMT_LED_STRIP_GPIO_NUM 25
 
-static const char *TAG = "LED_TASK";
+#define EXAMPLE_LED_NUMBERS 10
+#define EXAMPLE_CHASE_SPEED_MS 200 // Slower refresh speed (increase delay to slow down)
 
-extern app_settings_t app_settings;
-extern SemaphoreHandle_t settings_mutex;
+static const char *TAG = "led_strip_task";
 
-rgb_color_t get_color_from_enum(int color_index)
+static uint8_t led_strip_pixels[EXAMPLE_LED_NUMBERS * 3];
+
+void led_task(void *pvParameter)
 {
-    switch ((color_name_t)color_index)
-    {
-    case COLOR_GREEN:
-        return (rgb_color_t){0, 255, 0};
-    case COLOR_RED:
-        return (rgb_color_t){255, 0, 0};
-    case COLOR_BLUE:
-        return (rgb_color_t){0, 0, 255};
-    case COLOR_YELLOW:
-        return (rgb_color_t){255, 255, 0};
-    case COLOR_PURPLE:
-        return (rgb_color_t){128, 0, 128};
-    case COLOR_CYAN:
-        return (rgb_color_t){0, 255, 255};
-    case COLOR_WHITE:
-        return (rgb_color_t){255, 255, 255};
-    case COLOR_ORANGE:
-        return (rgb_color_t){255, 165, 0};
-    case COLOR_OFF:
-    default:
-        return (rgb_color_t){0, 0, 0};
-    }
-}
+    uint32_t red = 0;
+    uint32_t green = 0;
+    uint32_t blue = 0;
 
-// void led_task(void *pvParameters)
-// {
-//     led_strip_t strip = {
-//         .type = LED_STRIP_WS2812,
-//         .length = NUM_LEDS,
-//         .gpio = LED_STRIP_GPIO,
-//         .buf = NULL,
-//         .channel = 0};
-
-//     ESP_ERROR_CHECK(led_strip_init(&strip));
-
-//     while (1)
-//     {
-//         bool manual = false;
-//         bool enabled = false;
-//         int color_index = 0;
-
-//         if (xSemaphoreTake(settings_mutex, pdMS_TO_TICKS(100)))
-//         {
-//             manual = app_settings.manual_mode;
-//             enabled = app_settings.leds_enabled;
-//             color_index = app_settings.color;
-//             xSemaphoreGive(settings_mutex);
-//         }
-
-//         rgb_color_t color = (manual && enabled) ? get_color_from_enum(color_index) : (rgb_color_t){0, 0, 0};
-
-//         ESP_LOGI(TAG, "manual=%s, enabled=%s, color_index=%d, color=(R:%d G:%d B:%d)",
-//                  manual ? "true" : "false",
-//                  enabled ? "true" : "false",
-//                  color_index,
-//                  color.r, color.g, color.b);
-
-//         rgb_t rgb = {.r = color.r, .g = color.g, .b = color.b};
-
-//         esp_err_t err = led_strip_set_pixel(&strip, 0, rgb);
-//         if (err != ESP_OK)
-//         {
-//             ESP_LOGE(TAG, "led_strip_set_pixel failed: %s", esp_err_to_name(err));
-//         }
-
-//         err = led_strip_flush(&strip);
-//         if (err != ESP_OK)
-//         {
-//             ESP_LOGE(TAG, "led_strip_flush failed: %s", esp_err_to_name(err));
-//         }
-
-//         vTaskDelay(pdMS_TO_TICKS(500));
-//     }
-// }
-void led_task(void *pvParameters)
-{
-    led_strip_t strip = {
-        .type = LED_STRIP_WS2812,
-        .length = NUM_LEDS,
-        .gpio = LED_STRIP_GPIO,
-        .buf = NULL,
-        .channel = 0,
+    ESP_LOGI(TAG, "Create RMT TX channel");
+    rmt_channel_handle_t led_chan = NULL;
+    rmt_tx_channel_config_t tx_chan_config = {
+        .clk_src = RMT_CLK_SRC_DEFAULT, // select source clock
+        .gpio_num = RMT_LED_STRIP_GPIO_NUM,
+        .mem_block_symbols = 64, // increase the block size can make the LED less flickering
+        .resolution_hz = RMT_LED_STRIP_RESOLUTION_HZ,
+        .trans_queue_depth = 4, // set the number of transactions that can be pending in the background
     };
+    ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &led_chan));
 
-    ESP_ERROR_CHECK(led_strip_init(&strip));
+    ESP_LOGI(TAG, "Install led strip encoder");
+    rmt_encoder_handle_t led_encoder = NULL;
+    led_strip_encoder_config_t encoder_config = {
+        .resolution = RMT_LED_STRIP_RESOLUTION_HZ,
+    };
+    ESP_ERROR_CHECK(rmt_new_led_strip_encoder(&encoder_config, &led_encoder));
 
-    rgb_t red = {.r = 255, .g = 0, .b = 0};
+    ESP_LOGI(TAG, "Enable RMT TX channel");
+    ESP_ERROR_CHECK(rmt_enable(led_chan));
 
+    ESP_LOGI(TAG, "Start LED green color");
+    rmt_transmit_config_t tx_config = {
+        .loop_count = 0, // no transfer loop
+    };
     while (1)
     {
-        ESP_ERROR_CHECK(led_strip_set_pixel(&strip, 0, red));
-        ESP_ERROR_CHECK(led_strip_flush(&strip));
+        for (int i = 0; i < EXAMPLE_LED_NUMBERS; i++)
+        {
+            // Set all LEDs to green (255 for green, 0 for red and blue)
+            red = 0;     // No red
+            green = 255; // Maximum green
+            blue = 0;    // No blue
 
-        ESP_LOGI(TAG, "LED set to RED");
-        vTaskDelay(pdMS_TO_TICKS(1000));
+            led_strip_pixels[i * 3 + 0] = green;
+            led_strip_pixels[i * 3 + 1] = blue;
+            led_strip_pixels[i * 3 + 2] = red;
+        }
+
+        // Flush RGB values to LEDs
+        ESP_ERROR_CHECK(rmt_transmit(led_chan, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config));
+        ESP_ERROR_CHECK(rmt_tx_wait_all_done(led_chan, portMAX_DELAY));
+        vTaskDelay(pdMS_TO_TICKS(EXAMPLE_CHASE_SPEED_MS)); // Slow refresh speed
     }
 }

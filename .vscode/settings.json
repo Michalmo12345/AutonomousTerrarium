@@ -17,6 +17,8 @@
         "led_strip.h": "c",
         "rmt_tx.h": "c",
         "rmt_rx.h": "c",
-        "task.h": "c"
+        "task.h": "c",
+        "freertos.h": "c",
+        "pump_control.h": "c"
     }
 }

@@ -7,6 +7,7 @@ idf_component_register(
          "sensors/sensor_temp_humidity.c"
          "sensors/water_level.c"
          "led_strip/led_task.c"
+         "led_strip/led_strip_encoder.c"
          "control/heater_control.c"
          "control/pump_control.c"
 
