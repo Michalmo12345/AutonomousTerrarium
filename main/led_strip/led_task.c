@@ -1,4 +1,5 @@
 // led_strip_task.c
+// led_strip_task.c
 #include "led_task.h"
 #include "esp_log.h"
 #include "driver/rmt_tx.h"
@@ -8,7 +9,7 @@
 #define RMT_LED_STRIP_RESOLUTION_HZ 10000000 // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
 #define RMT_LED_STRIP_GPIO_NUM 25
 
-#define EXAMPLE_LED_NUMBERS 10
+#define EXAMPLE_LED_NUMBERS 1
 #define EXAMPLE_CHASE_SPEED_MS 200 // Slower refresh speed (increase delay to slow down)
 
 static const char *TAG = "led_strip_task";
@@ -42,27 +43,67 @@ void led_task(void *pvParameter)
     ESP_LOGI(TAG, "Enable RMT TX channel");
     ESP_ERROR_CHECK(rmt_enable(led_chan));
 
-    ESP_LOGI(TAG, "Start LED green color");
+    ESP_LOGI(TAG, "Start LED flashing sequence");
     rmt_transmit_config_t tx_config = {
         .loop_count = 0, // no transfer loop
     };
+
+    uint32_t last_toggle_time = 0; // Time of last toggle (for example purposes)
+    static bool leds_on = true;    // Flag to track LED states
+    static int color_index = 0;    // To track the current color in the sequence
+
     while (1)
     {
-        for (int i = 0; i < EXAMPLE_LED_NUMBERS; i++)
+        // Flashing cycle every EXAMPLE_CHASE_SPEED_MS (200ms) interval
+        if (esp_log_timestamp() - last_toggle_time > EXAMPLE_CHASE_SPEED_MS)
         {
-            // Set all LEDs to green (255 for green, 0 for red and blue)
-            red = 0;     // No red
-            green = 255; // Maximum green
-            blue = 0;    // No blue
+            last_toggle_time = esp_log_timestamp();
 
-            led_strip_pixels[i * 3 + 0] = green;
-            led_strip_pixels[i * 3 + 1] = blue;
-            led_strip_pixels[i * 3 + 2] = red;
+            // Change color based on the current cycle
+            switch (color_index)
+            {
+            case 0:
+                // Flash Green
+                green = 255;
+                red = 0;
+                blue = 0;
+                break;
+            case 1:
+                // Flash Red
+                green = 0;
+                red = 255;
+                blue = 0;
+                break;
+            case 2:
+                // Flash Blue
+                green = 0;
+                red = 0;
+                blue = 255;
+                break;
+            case 3:
+                // Turn Off LEDs
+                green = 0;
+                red = 0;
+                blue = 0;
+                break;
+            }
+
+            // Update the color for all LEDs
+            for (int i = 0; i < EXAMPLE_LED_NUMBERS; i++)
+            {
+                led_strip_pixels[i * 3 + 0] = green;
+                led_strip_pixels[i * 3 + 1] = blue;
+                led_strip_pixels[i * 3 + 2] = red;
+            }
+
+            // Send RGB values to LEDs
+            ESP_ERROR_CHECK(rmt_transmit(led_chan, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config));
+            ESP_ERROR_CHECK(rmt_tx_wait_all_done(led_chan, portMAX_DELAY));
+
+            // Move to next color in the sequence
+            color_index = (color_index + 1) % 4; // Loop through the sequence (0 - Green, 1 - Red, 2 - Blue, 3 - Off)
         }
 
-        // Flush RGB values to LEDs
-        ESP_ERROR_CHECK(rmt_transmit(led_chan, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config));
-        ESP_ERROR_CHECK(rmt_tx_wait_all_done(led_chan, portMAX_DELAY));
-        vTaskDelay(pdMS_TO_TICKS(EXAMPLE_CHASE_SPEED_MS)); // Slow refresh speed
+        vTaskDelay(pdMS_TO_TICKS(10)); // Small delay for the task to run
     }
 }
