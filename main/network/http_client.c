@@ -30,7 +30,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
 void http_post_task(void *pvParameters)
 {
-    const char *url = "http://13.51.108.48:5000/api/readings/20";
+    const char *url = "http://16.170.162.232:5000/api/readings/20";
     // const char *token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ2OTkxNjExLCJleHAiOjE3NDY5OTUyMTF9.Tfks1jOA3wc_TGwjvsANLzXD1SUR70v1cumiobcNTGo";
     const char *token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ4MzQzNzUxLCJleHAiOjE3Nzk4Nzk3NTF9.75Q6W9iCcQ0bOQLacF6QwtcYUOd7jkdY931H7kb978o";
     char post_data[256];
@@ -95,7 +95,7 @@ void http_post_task(void *pvParameters)
 
 void http_get_task(void *pvParameters)
 {
-    const char *url = "http://13.51.108.48:5000/api/terrariums/20/settings";
+    const char *url = "http://16.170.162.232:5000/api/terrariums/20/settings";
     // const char *token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ2OTkxNjExLCJleHAiOjE3NDY5OTUyMTF9.Tfks1jOA3wc_TGwjvsANLzXD1SUR70v1cumiobcNTGo";
     const char *token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwiaWF0IjoxNzQ4MzQzNzUxLCJleHAiOjE3Nzk4Nzk3NTF9.75Q6W9iCcQ0bOQLacF6QwtcYUOd7jkdY931H7kb978o";
     static char response_buffer[512];

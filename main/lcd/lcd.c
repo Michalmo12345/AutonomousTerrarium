@@ -5,6 +5,8 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "shared_data.h"
+#include <math.h>
+#include "esp_rom_sys.h"
 
 #define I2C_PORT I2C_NUM_0
 #define I2C_SDA 21
@@ -51,9 +53,11 @@ static void lcd_send_nibble(uint8_t nibble, uint8_t mode)
 {
     uint8_t data = nibble | mode | LCD_BACKLIGHT;
     lcd_write_byte(data | ENABLE);
-    delay_us(1);
+    // delay_us(1);
+    esp_rom_delay_us(1);
     lcd_write_byte(data & ~ENABLE);
-    delay_us(50);
+    // delay_us(50);
+    esp_rom_delay_us(50);
 }
 
 static void lcd_send_cmd(uint8_t cmd)
@@ -84,7 +88,8 @@ void lcd_init(void)
     lcd_send_nibble(0x30, 0);
     vTaskDelay(pdMS_TO_TICKS(5));
     lcd_send_nibble(0x30, 0);
-    delay_us(150);
+    // delay_us(150);
+    esp_rom_delay_us(150);
     lcd_send_nibble(0x30, 0);
     lcd_send_nibble(0x20, 0);
 
@@ -139,6 +144,11 @@ void lcd_task(void *pvParameters)
             xSemaphoreGive(data_mutex);
         }
 
+        if (!isfinite(t) || !isfinite(h))
+        {
+            t = 0.0f;
+            h = 0.0f;
+        }
         snprintf(line1, sizeof(line1), "Temp: %.1fC", t);
         snprintf(line2, sizeof(line2), "Wilg: %.0f%%", h);
         ESP_LOGI("LCD", "Aktualizacja ekranu: %.1f / %.1f", t, h);
@@ -149,6 +159,6 @@ void lcd_task(void *pvParameters)
         lcd_gotoxy(0, 1);
         lcd_write_str(line2);
 
-        vTaskDelay(pdMS_TO_TICKS(5000));
+        vTaskDelay(pdMS_TO_TICKS(10000));
     }
 }

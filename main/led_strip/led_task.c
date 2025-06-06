@@ -8,7 +8,7 @@
 #include "shared_data.h"
 
 #define RMT_LED_STRIP_RESOLUTION_HZ 10000000 // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
-#define RMT_LED_STRIP_GPIO_NUM 25
+#define RMT_LED_STRIP_GPIO_NUM 12
 
 #define EXAMPLE_LED_NUMBERS 1
 #define EXAMPLE_CHASE_SPEED_MS 200 // Slower refresh speed (increase delay to slow down)
@@ -165,9 +165,10 @@ void led_task(void *pvParameter)
 
     //     vTaskDelay(pdMS_TO_TICKS(10)); // Small delay for the task to run
     // }
-    uint32_t last_update_time = 0;
-    color_name_t previous_color = COLOR_OFF;
-    bool previous_led_enabled = false;
+
+    // uint32_t last_update_time = 0;
+    // color_name_t previous_color = COLOR_OFF;
+    // bool previous_led_enabled = false;
 
     // while (1)
     // {
@@ -257,6 +258,12 @@ void led_task(void *pvParameter)
             current_color_int = app_settings.color;
             current_leds_enabled = app_settings.leds_enabled;
             xSemaphoreGive(settings_mutex);
+        }
+
+        if (xSemaphoreTake(data_mutex, pdMS_TO_TICKS(100)))
+        {
+            shared_data.leds_on = current_leds_enabled;
+            xSemaphoreGive(data_mutex);
         }
 
         color_name_t current_color = COLOR_OFF;

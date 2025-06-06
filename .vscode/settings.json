@@ -19,6 +19,7 @@
         "rmt_rx.h": "c",
         "task.h": "c",
         "freertos.h": "c",
-        "pump_control.h": "c"
+        "pump_control.h": "c",
+        "esp_rom_sys.h": "c"
     }
 }

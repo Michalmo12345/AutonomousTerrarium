@@ -7,3 +7,4 @@ kconfigs.in
 kconfigs*
 .vscode
 config/
+.VSCodeCounter/*
