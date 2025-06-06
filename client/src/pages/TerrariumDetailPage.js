@@ -9,8 +9,10 @@ import AutomaticSettingsPanel from '../components/AutomaticSettingsPanel';
 import ReadingStatusPanel from '../components/ReadingStatusPanel';
 import ReadingChart from '../components/ReadingChart';
 import NavBar from '../components/NavBar';
+import SetValuesPanel from '../components/SetValuesPanel';
 
-const BASE_URL = 'http://13.51.108.48:5000/api';
+
+const BASE_URL = 'http://16.170.162.232:5000/api';
 const REFRESH_INTERVAL = 5000;
 
 export default function TerrariumDetailPage() {
@@ -144,6 +146,7 @@ export default function TerrariumDetailPage() {
 
           <Col md={6} className="mb-4">
             <ReadingStatusPanel latest={latest} />
+            <SetValuesPanel terrarium={terrarium} />
           </Col>
         </Row>
 

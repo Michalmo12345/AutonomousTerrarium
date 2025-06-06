@@ -8,7 +8,7 @@ const readingRoutes = require('./routes/readings')
 
 const app = express()
 app.use(cors({
-    origin: ['http://13.51.108.48', 'http://13.51.108.48:3000'],
+    origin: ['http://16.170.162.232', 'http://16.170.162.232:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   }));

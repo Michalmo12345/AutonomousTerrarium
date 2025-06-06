@@ -36,9 +36,6 @@ export default function ReadingStatusPanel({ latest }) {
           <StatusDot value={latest.leds_on} />
           LEDs
         </div>
-        <div className="text-muted mt-3" style={{ fontSize: '0.8rem' }}>
-          {new Date(latest.created_at).toLocaleString()}
-        </div>
       </Card.Body>
     </Card>
   );
