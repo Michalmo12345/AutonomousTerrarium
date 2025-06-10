@@ -147,7 +147,7 @@ const DashboardPage = () => {
                       <Card.Title className="h4 mb-3">{terrarium.name}</Card.Title>
                       <div className="mb-2">
                         <span className="text-white">Temperature: </span>
-                        <span className="text-white">{terrarium.temperature}°C</span>
+                        <span className="text-white">{terrarium.day_temperature}°C</span>
                       </div>
                       <div>
                         <span className="text-white">Humidity: </span>
