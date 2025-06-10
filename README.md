@@ -174,4 +174,4 @@ Distributed under the MIT License. See [LICENSE](LICENSE) for details.
 ## 📬 Contact
 
 _Questions? Feedback? Bug reports?_  
-Open an issue on GitLab or email **project@example.com**.  
+Feel free to open an issue on GitLab.
