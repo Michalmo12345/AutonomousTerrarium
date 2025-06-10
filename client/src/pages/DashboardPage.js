@@ -17,7 +17,7 @@ const DashboardPage = () => {
   useEffect(() => {
     const fetchTerrariums = async () => {
       try {
-        const response = await axios.get(`http://16.170.162.232:5000/api/terrariums`, {
+        const response = await axios.get(`http://13.60.223.176:5000/api/terrariums`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setTerrariums(response.data);
@@ -37,7 +37,7 @@ const DashboardPage = () => {
     }
     try {
       const response = await axios.post(
-        `http://16.170.162.232:5000/api/terrariums`,
+        `http://13.60.223.176:5000/api/terrariums`,
         { name: addName, temperature: Number(addTemperature), humidity: Number(addHumidity) },
         { headers: { Authorization: `Bearer ${token}` } }
       );

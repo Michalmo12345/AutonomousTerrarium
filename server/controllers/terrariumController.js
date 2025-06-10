@@ -58,7 +58,7 @@ const getTerrariumById = async (req, res) => {
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Terrarium not found or unauthorized' });
     }
-    res.json(result.rows[0]);A
+    res.json(result.rows[0]);
   } catch (err) {
     console.error('Error in getTerrariumById:', err);
     res.status(500).json({ error: 'Something went wrong' });

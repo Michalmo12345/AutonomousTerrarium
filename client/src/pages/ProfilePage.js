@@ -6,7 +6,7 @@ import { useAuth } from '../authContext';
 import axios from 'axios';
 import NavBar from '../components/NavBar';
 
-const BASE_URL = 'http://16.170.162.232:5000/api';
+const BASE_URL = 'http://13.60.223.176:5000/api';
 
 export default function ProfilePage() {
   const { token } = useAuth();

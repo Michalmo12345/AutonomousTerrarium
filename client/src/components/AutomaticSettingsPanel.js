@@ -2,7 +2,7 @@ import { Form, Button } from 'react-bootstrap';
 import { useState } from 'react';
 import axios from 'axios';
 
-const BASE_URL = 'http://16.170.162.232:5000/api';
+const BASE_URL = 'http://13.60.223.176:5000/api';
 
 export default function AutomaticSettingsPanel({ terrarium, id, token, setTerrarium }) {
   const [form, setForm] = useState({ temperature: '', humidity: '' });
