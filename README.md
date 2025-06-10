@@ -1,93 +1,177 @@
-# Z12
+# 🌱 Autonomous Terrarium System
 
+![Project Status: In Development](https://img.shields.io/badge/status-in--development-yellow)  
+![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
+An end-to-end, self-regulating terrarium platform combining:
 
-## Getting started
+- **Web Application** (React + Node.js) deployed on AWS EC2  
+- **Embedded Controller** (ESP32 + FreeRTOS) communicating over HTTPS  
+- **3D-Printed Enclosure & Mounts** (STL/3MF files)
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+---
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## 🧠 Project Overview
 
-## Add your files
+This modular system continuously monitors and controls:
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+- **Environmental Sensors**: temperature, humidity (DHT22), water level (float switch)
+- **Actuators**: heating mat, LEDs, sprinkler  
+- **Human Interface**: live dashboard, manual/automatic modes, remote configuration  
 
-```
-cd existing_repo
-git remote add origin https://gitlab-stud.elka.pw.edu.pl/piar_student_projects/25l/z12.git
-git branch -M main
-git push -uf origin main
-```
+Three Git branches:
 
-## Integrate with your tools
+| Branch                 | Contents                                             |
+| ---------------------- | ---------------------------------------------------- |
+| **main**               | Full-stack web app (React front-end, Node.js API)    |
+| **espHTTPcommunication** | ESP32 firmware (ESP-IDF + FreeRTOS + `esp_http_client`) |
+| **models**             | 3D-printable STL/3MF files for enclosure & mounts    |
 
-- [ ] [Set up project integrations](https://gitlab-stud.elka.pw.edu.pl/piar_student_projects/25l/z12/-/settings/integrations)
+---
 
-## Collaborate with your team
+## 🌐 Web Application
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+### Technology Stack
 
-## Test and Deploy
+- **Frontend**: React (hooks, context API, Tailwind CSS)  
+- **Backend**: Node.js + Express, RESTful API  
+- **Database**: PostgreSQL (hosted on AWS RDS or EC2)  
+- **Authentication**: JWT tokens, `authContext.js` + `authService.js`  
+- **Deployment**: AWS EC2 instance behind Nginx + PM2
 
-Use the built-in continuous integration in GitLab.
+### Features
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+- **Real-Time Dashboard**  
+  - Live charts for temperature, humidity & water level  
+  - Toggle between Manual & Automatic modes  
+  - Set day/night thresholds  
 
-***
+- **User Management**  
+  - Sign up / Sign in flows  
+  - Password reset & profile page (coming soon)
 
-# Editing this README
+- **API Endpoints** (Express routes in `/server/routes`)  
+  - `GET /api/terrariums/:id/readings`  
+  - `POST /api/terrariums/:id/settings`  
+  - `POST /api/auth/login` / `POST /api/auth/register`
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+### Quickstart
 
-## Suggestions for a good README
+1. **Clone & Install**
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+    ```bash
+    git clone https://gitlab-stud.elka.pw.edu.pl/piar_student_projects/25l/z12.git
+    cd z12
+    cd main
+    npm install
+    ```
 
-## Name
-Choose a self-explaining name for your project.
+2. **Environment Variables**
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+    Copy `server/.env.example` → `server/.env` and set:
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+    ```dotenv
+    PORT=5000
+    DATABASE_URL=postgres://USER:PASS@HOST:PORT/DB_NAME
+    JWT_SECRET=your_jwt_secret
+    ```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+3. **Run Locally**
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+    ```bash
+    # Start backend
+    cd server
+    npm start
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+    # Start frontend
+    cd ../client
+    npm start
+    ```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+4. **Build & Deploy**
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+    - Frontend: `npm run build` → serve `/build` via Nginx  
+    - Backend: use **PM2** on AWS EC2  
+    - Secure with SSL (Let’s Encrypt + Nginx)
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+---
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+## 🔧 Embedded Controller (ESP32)
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+**Branch**: `espHTTPcommunication`  
+**Framework**: ESP-IDF + FreeRTOS  
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+### Core Components
 
-## License
-For open source projects, say how it is licensed.
+- **Tasks & Synchronization**  
+  - `shared_data_t` guarded by `xSemaphoreCreateMutex()`  
+  - Separate tasks: Sensor read, Display update, HTTP client  
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- **Sensors & Actuators**  
+  - DHT22 (temp & humidity)  
+  - Float switch (water level)  
+  - I2C LCD1602/2004 via PCF8574  
+  - GPIO: heating mat, LEDs, sprinkler  
+  - PI(D) control algorithm for temperature regulation  
+
+- **Networking**  
+  - Wi-Fi Station mode (`wifi_init_sta()`)  
+  - HTTPS POST to web API (`esp_http_client`)
+
+### Getting Started
+
+1. **Set up ESP-IDF** (v4.x) and toolchain  
+2. **Clone & Build**
+
+    ```bash
+    cd espHTTPcommunication/ESP_PIAR
+    git submodule update --init components/esp-idf-lib
+    idf.py set-target esp32
+    idf.py menuconfig      # configure Wi-Fi SSID/PASS
+    idf.py build flash monitor
+    ```
+
+---
+
+## 🧱 3D-Printed Models
+
+**Branch**: `models`  
+
+- Enclosure panels, sensor mounts, cable clips  
+- Formats: STL, 3MF (sliced for common FDM printers)  
+
+👉 Inspect and customize in your favorite CAD/CAM tool before printing.
+
+---
+
+## 🚀 Roadmap
+
+- [ ] Remote schedule & threshold management via web UI  
+- [ ] Offline data logging on microSD when disconnected  
+- [ ] User profiles & multi-terrarium support  
+- [ ] Mobile-responsive dashboard  
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repo  
+2. Create a feature branch: `git checkout -b feat/awesome-feature`  
+3. Commit your changes: `git commit -m "Add awesome feature"`  
+4. Push to your branch: `git push origin feat/awesome-feature`  
+5. Open a merge request on GitLab
+
+Please follow the [GitLab Flow](https://docs.gitlab.com/ee/topics/gitlab_flow.html) and add descriptive commit messages.
+
+---
+
+## 📜 License
+
+Distributed under the MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+## 📬 Contact
+
+_Questions? Feedback? Bug reports?_  
+Open an issue on GitLab or email **project@example.com**.  
