@@ -1,0 +1,114 @@
+html, body, #root {
+  background-color: #000 !important;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
+
+.form-container {
+  background-color: #111;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.signup-link {
+  color: #ccc;
+}
+
+.card {
+  background-color: #1a1a1a !important;
+  border: none !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.card-text {
+  font-size: 0.95rem;
+}
+
+.btn-primary {
+  background-color: #333;
+  border-color: #444;
+}
+
+.btn-primary:hover {
+  background-color: #444;
+}
+
+.btn-secondary {
+  background-color: #222;
+  border-color: #333;
+}
+
+.btn-secondary:hover {
+  background-color: #333;
+}
+
+.btn-warning {
+  background-color: transparent;
+  border: 1px solid #666;
+  color: #ccc;
+  font-size: 0.9rem;
+  padding: 0.25rem 0.75rem;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.btn-warning:hover {
+  color: #fff;
+  border-color: #999;
+}
+
+.btn-danger {
+  background-color: transparent;
+  border: 1px solid #666;
+  color: #ccc;
+  font-size: 0.9rem;
+  padding: 0.25rem 0.75rem;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.btn-danger:hover {
+  color: #ff5555;
+  border-color: #ff5555;
+}
+
+.modal-dark .modal-content {
+  background-color: #111;
+  color: #fff;
+}
+
+.modal-dark .modal-header,
+.modal-dark .modal-footer {
+  border-color: #444;
+}
+
+.modal-dark .modal-header .close {
+  color: #fff;
+}
+
+/* Gradient underline for headers */
+.gradient-underline {
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(90deg, #555, #888);
+  border-radius: 2px;
+}
+
+/* Muted text */
+.text-muted {
+  color: #888 !important;
+}
