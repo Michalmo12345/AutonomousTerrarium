@@ -5,9 +5,9 @@
 
 An end-to-end, self-regulating terrarium platform combining:
 
-- **Web Application** (React + Node.js) deployed on AWS EC2  
-- **Embedded Controller** (ESP32 + FreeRTOS) communicating over HTTPS  
-- **3D-Printed Enclosure & Mounts** (STL/3MF files)
+- **Web Application** (React + Node.js) deployed on AWS EC2  - developed by @Qasdfyk
+- **Embedded Controller** (ESP32 + FreeRTOS) communicating over HTTPS - developed by @Michalmo12345
+- **3D-Printed Enclosure & Mounts** (STL/3MF files) - developed by Aleksander Przyborek
 
 ---
 
